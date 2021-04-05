@@ -1,6 +1,6 @@
 use crate::model::nats_message::*;
 use crate::model::*;
-use crate::nats_broker::*;
+use crate::lib::nats_broker::*;
 
 use chrono::Utc;
 use std::collections::HashMap;
@@ -9,11 +9,11 @@ pub async fn nats_server(nats_conn: NatsConnection) {
 }
 
 async fn create_users_topic(topic: String, nats_conn: NatsConnection) {
-    match NatsServer::create_response_subcriber(nats_conn, topic.to_owned(), "".to_string()).await {
+    match NatsServer::queue_subscribe(nats_conn, topic.to_owned(), "".to_string()).await {
         Ok(sub) => {
             sub.with_handler(move |msg| {
-                let nats_req = NatsRequest::from(msg.clone());
-                let res = futures::executor::block_on(hello());
+                // let nats_req = NatsRequest::from(msg.clone());
+                // let res = futures::executor::block_on(hello());
                 // let nats_res = match res {
                 //     Ok(user) => {
                 //         resp_nats(
@@ -39,25 +39,25 @@ async fn create_users_topic(topic: String, nats_conn: NatsConnection) {
         }
         Err(e) => {
             println!(
-                "[NATS][FAIL] Create subcriber for topic:`{}` fail | {}",
+                "[NATS][FAIL] Create subscriber for topic:`{}` fail | {}",
                 topic, e
             );
         }
     }
 }
 async fn get_users_topic(topic: String, nats_conn: NatsConnection) {
-    match NatsServer::create_response_subcriber(nats_conn, topic.to_owned(), "".to_string()).await {
+    match NatsServer::queue_subscribe(nats_conn, topic.to_owned(), "".to_string()).await {
         Ok(sub) => {
             sub.with_handler(move |msg| {
-                let nats_res = NatsRequest::from(msg.clone());
-                let res = futures::executor::block_on(hello());
+                // let nats_res = NatsRequest::from(msg.clone());
+                // let res = futures::executor::block_on(hello());
                 // let res_data = serde_json::to_string(&res.unwrap()).unwrap();
                 msg.respond("")
             });
         }
         Err(e) => {
             println!(
-                "[NATS][FAIL] Create subcriber for topic:`{}` fail | {}",
+                "[NATS][FAIL] Create subscriber for topic:`{}` fail | {}",
                 topic, e
             );
         }

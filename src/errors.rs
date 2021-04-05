@@ -1,6 +1,6 @@
 use actix_web::{error, error::ResponseError, HttpRequest, HttpResponse};
 use actix_web::http::StatusCode;
-use serde_json::{Map as JsonMap, Value as JsonValue};
+use serde_json::{Map as JsonMap, Value as Json};
 use validator::ValidationErrors;
 
 #[derive(Debug, failure::Fail, PartialEq)]
@@ -30,7 +30,7 @@ pub enum ServerError {
     #[fail(display = "Database Error")]
     DBError(String),
     #[fail(display = "Unprocessable Entity: {}", _0)]
-    UnprocessableEntity(JsonValue),
+    UnprocessableEntity(Json),
     #[fail(display = "Time Out")]
     RequestTimeOut,
 }
@@ -87,12 +87,10 @@ impl ResponseError for ServerError {
 impl From<ValidationErrors> for ServerError {
     fn from(errors: ValidationErrors) -> Self {
         let mut err_map = JsonMap::new();
-        // transforms errors into objects that err_map can take
         for (field, errors) in errors.field_errors().iter() {
-            let errors: Vec<JsonValue> = errors
+            let errors: Vec<Json> = errors
                 .iter()
                 .map(|error| {
-                    // dbg!(error) // <- Uncomment this if you want to see what error looks like
                     json!(error.message)
                 })
                 .collect();

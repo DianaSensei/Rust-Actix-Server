@@ -1,5 +1,5 @@
-use chrono::{Utc};
-use crate::utils::hasher::HASHER;
+// use chrono::{Utc};
+// use crate::utils::hasher::HASHER;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {

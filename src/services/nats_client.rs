@@ -1,34 +1,34 @@
-use super::super::lib::*;
-use crate::core::redis_db::*;
-use crate::nats_broker::*;
+// use crate::lib::redis_db::*;
+// use crate::lib::nats_broker::*;
+// use actix_web::{web};
 
-pub async fn create_users(
-    req: web::Json<Register>,
-    _pool: web::Data<RedisFactory>,
-    nats_pool: web::Data<NatsConnection>,
-) -> HttpResponse {
-    let req_data = NatsRequest {
-        request_type: "".to_owned(),
-        request_id: "".to_owned(),
-        from: "client".to_owned(),
-        data: serde_json::to_value(&req.to_owned()).unwrap(),
-        status: true,
-        status_code: 0,
-        status_des: "success".to_string(),
-        send_time: Utc::now().timestamp(),
-    };
-    let resp = nats_pool.request("user.create", serde_json::to_string(&req_data).unwrap());
-    match resp {
-        Ok(msg) => {    
-            let nats_res = NatsResponse::from(msg.clone());
-            match nats_res.status_code {
-                0 => HttpResponse::Created().json(Response::from(nats_res)),
-                _ => ServerError::InternalServerError.error_response(),
-            }
-        }
-        Err(_e) => ServerError::InternalServerError.error_response(),
-    }
-}
+// pub async fn create_users(
+//     req: web::Json<Register>,
+//     _pool: web::Data<RedisFactory>,
+//     nats_pool: web::Data<NatsConnection>,
+// ) -> HttpResponse {
+//     let req_data = NatsRequest {
+//         request_type: "".to_owned(),
+//         request_id: "".to_owned(),
+//         from: "client".to_owned(),
+//         data: serde_json::to_value(&req.to_owned()).unwrap(),
+//         status: true,
+//         status_code: 0,
+//         status_des: "success".to_string(),
+//         send_time: Utc::now().timestamp(),
+//     };
+//     let resp = nats_pool.request("user.create", serde_json::to_string(&req_data).unwrap());
+//     match resp {
+//         Ok(msg) => {    
+//             let nats_res = NatsResponse::from(msg.clone());
+//             match nats_res.status_code {
+//                 0 => HttpResponse::Created().json(Response::from(nats_res)),
+//                 _ => ServerError::InternalServerError.error_response(),
+//             }
+//         }
+//         Err(_e) => ServerError::InternalServerError.error_response(),
+//     }
+// }
 // pub async fn get_users(query: web::Query<HashMap<String, String>>) -> HttpResponse {
 //     match modules::get_users(query.to_owned()).await {
 //         Ok(vec) => HttpResponse::Ok().json(ResponseList {
@@ -106,12 +106,12 @@ pub async fn create_users(
 //     }
 //     res
 // }
-impl From<NatsResponse> for Response {
-    fn from(nats_resp: NatsResponse) -> Self {
-        Response {
-            data: get_sub_field(&serde_json::to_value(&nats_resp.data).unwrap()),
-            message: nats_resp.status_des,
-            status: nats_resp.status,
-        }
-    }
-}
+// impl From<NatsResponse> for Response {
+//     fn from(nats_resp: NatsResponse) -> Self {
+//         Response {
+//             data: get_sub_field(&serde_json::to_value(&nats_resp.data).unwrap()),
+//             message: nats_resp.status_des,
+//             status: nats_resp.status,
+//         }
+//     }
+// }

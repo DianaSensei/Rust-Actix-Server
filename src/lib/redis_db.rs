@@ -22,7 +22,7 @@ pub struct RedisFactory {
     pub pool: RedisPool,
 }
 impl RedisFactory {
-    pub async fn connect(url: String) -> Result<Self, ()> {
+    pub async fn create(url: String) -> Result<Self, ()> {
         match redis::Client::open(url) {
             Ok(client) => {
                 let manager = RedisConnectionManager::new(client);
@@ -35,7 +35,10 @@ impl RedisFactory {
                         .build(manager),
                 })
             }
-            Err(_) => Err(()),
+            Err(e) => {
+                println!("Connect Redis Fail: {:?}", e);
+                Err(())
+            },
         }
     }
     pub async fn get_connection(&self) -> Result<RedisConnection, RedisError> {

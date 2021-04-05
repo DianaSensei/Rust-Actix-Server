@@ -3,7 +3,7 @@ pub type NatsConnection = Connection;
 #[derive(Clone)]
 pub struct NatsFactory;
 impl NatsFactory {
-    pub async fn get_pool(url: String) -> std::io::Result<NatsConnection> {
+    pub async fn create(url: String) -> std::io::Result<NatsConnection> {
         connect(url.as_str())
     }
     pub async fn get_pool_with_user_pass(
@@ -19,13 +19,13 @@ impl NatsFactory {
 #[derive(Clone)]
 pub struct NatsServer;
 impl NatsServer {
-    pub async fn create_subcriber(
+    pub async fn subscribe(
         conn: NatsConnection,
         topic_name: String,
     ) -> std::io::Result<Subscription> {
         conn.subscribe(topic_name.as_str())
     }
-    pub async fn create_response_subcriber(
+    pub async fn queue_subscribe(
         conn: NatsConnection,
         topic_name: String,
         queue: String

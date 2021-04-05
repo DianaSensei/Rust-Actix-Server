@@ -10,11 +10,15 @@ extern crate validator_derive;
 // extern crate log;
 
 #[allow(dead_code)]
-mod nats_broker;
-#[allow(dead_code)]
 mod config;
 #[allow(dead_code)]
 mod errors;
+#[allow(dead_code)]
+mod services;
+#[allow(dead_code)]
+mod controllers;
+#[allow(dead_code)]
+mod lib;
 #[allow(dead_code)]
 mod model;
 #[allow(dead_code)]
@@ -24,21 +28,31 @@ mod utils;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    use crate::nats_broker::*;
-    use crate::core::nats_server;
-    use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
+    use crate::lib::{nats_broker::*, redis_db::*};
+    use crate::services::nats_server;
+    // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+    use actix_web::middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers};
+    use actix_files::Files;
     setup_log();
-    // let redis_fac = RedisFactory::connect(config::CONFIG.redis_url.to_owned())
-    //     .await
-    //     .expect("Connect Redis Fail");
-    let nats_fac = NatsFactory::get_pool(config::CONFIG.nats_url.to_owned())
+    
+    // let mut builder =
+    //     SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    // builder
+    //     .set_private_key_file("key.pem", SslFiletype::PEM)
+    //     .unwrap();
+    // builder.set_certificate_chain_file("cert.pem").unwrap();
+
+    let redis_fac = RedisFactory::create(config::CONFIG.redis_url.to_owned())
+        .await
+        .expect("Connect Redis Fail");
+    let nats_fac = NatsFactory::create(config::CONFIG.nats_url.to_owned())
         .await
         .expect("Connect Nats Fail");
 
     nats_server::nats_server(nats_fac.clone()).await; //Start Nats server
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            // .data(redis_fac.clone()) //Use Redis
+            .data(redis_fac.clone()) //Use Redis
             .data(nats_fac.clone()) //Use Nats
             .wrap(actix_web::middleware::Logger::default())
             .data(
@@ -65,12 +79,14 @@ async fn main() -> std::io::Result<()> {
                 },
             ))
             // .configure(app::routes::init_route)
+            .service(Files::new("/images", "static/images/").show_files_listing())
             .default_service(actix_web::web::route().to(|| actix_web::HttpResponse::MethodNotAllowed()))
     });
-    let mut listenfd = listenfd::ListenFd::from_env();
-    server = if let Some(l) = listenfd.take_tcp_listener(0)? {
+
+    server = if let Some(l) = listenfd::ListenFd::from_env().take_tcp_listener(0)? {
         server.listen(l)?
     } else {
+        // server.bind_openssl(&config::CONFIG.server, builder)?
         server.bind(&config::CONFIG.server)?
     };
     server.run().await
