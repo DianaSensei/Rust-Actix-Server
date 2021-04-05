@@ -1,4 +1,3 @@
-use bson::{Document};
 use chrono::{Utc};
 use crate::utils::hasher::HASHER;
 
@@ -61,21 +60,4 @@ pub struct UpdateUser {
     #[validate(phone(message = "phone_number not valid"))]
     // #[serde(rename = "phoneNumber")]
     pub phone_number: Option<String>,
-}
-
-lazy_static! {
-    pub static ref ADMIN_DOC: Document = bson::doc! {
-        "id": "user_06e75640-09b0-4b8f-b06f-a4af47aebd4a".to_string(),
-        "email": "admin@gmail.com".to_string(),
-        "password": HASHER.hash("123456789").unwrap(),
-        "first_name": "ADMIN".to_string(),
-        "last_name": "STARTED".to_string(),
-        "phone_number": "+84767336687".to_string(),
-        "role": "ADMIN".to_string(),
-        "created_by": "admin".to_string(),
-        "created_time_dt": Utc::now().timestamp(),
-        "updated_by": "admin".to_string(),
-        "updated_time_dt": Utc::now().timestamp(),
-        "status": 1
-    };
 }

@@ -8,12 +8,6 @@ TESTS = ""
 test:
 	@cargo test $(TESTS) --offline -- --color=always --test-threads=1 --nocapture
 
-mongostart:
-	@sudo docker run -d -p 27017:27017 -v `pwd`/data/db:/data/db --name started mongo
-
-mongostop:
-	@sudo docker stop started && sudo docker rm started
-
 docs: build
 	@cargo doc --no-deps
 
@@ -29,4 +23,4 @@ lint:
 dev:
 	@cargo run
 
-.PHONY: build test docs style-check lint dev mongostart mongostop
+.PHONY: build test docs style-check lint dev

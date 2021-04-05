@@ -1,5 +1,4 @@
 use actix_web::{web, HttpResponse};
-use bson::doc;
 pub fn init_route(cfg: &mut web::ServiceConfig) {
     use super::lib::*;
     use crate::app::controllers::*;
