@@ -26,7 +26,7 @@ mod utils;
 async fn main() -> std::io::Result<()> {
     use crate::nats_broker::*;
     use crate::core::nats_server;
-    use actix_web::middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers};
+    use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
     setup_log();
     // let redis_fac = RedisFactory::connect(config::CONFIG.redis_url.to_owned())
     //     .await
@@ -79,5 +79,6 @@ async fn main() -> std::io::Result<()> {
 fn setup_log() {
     dotenv::dotenv().ok();
     std::env::set_var("RUST_LOG", "actix_web=info,actix_server=info");
+    // std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 }

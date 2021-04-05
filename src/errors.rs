@@ -53,14 +53,14 @@ impl From<Vec<String>> for ErrorResponse {
 impl ResponseError for ServerError {
     fn error_response(&self) -> HttpResponse {
         match self {
-            ServerError::BadRequest(err) => HttpResponse::BadRequest().json::<ErrorResponse>(err.into()),
+            ServerError::BadRequest(err) => HttpResponse::BadRequest().json(err),
 
-            ServerError::NotFound(err) => HttpResponse::NotFound().json::<ErrorResponse>(err.into()),
+            ServerError::NotFound(err) => HttpResponse::NotFound().json(err),
             ServerError::Unauthorized(err) => {
-                HttpResponse::Unauthorized().json::<ErrorResponse>(err.into())
+                HttpResponse::Unauthorized().json(err)
             }
             ServerError::Conflict => HttpResponse::Conflict().finish(),
-            ServerError::Forbidden(err) => HttpResponse::Forbidden().json::<ErrorResponse>(err.into()),
+            ServerError::Forbidden(err) => HttpResponse::Forbidden().json(err),
             ServerError::UnprocessableEntity(json) => HttpResponse::BadRequest().json(json),
             ServerError::RequestTimeOut => HttpResponse::RequestTimeout().finish(),
             ServerError::MethodNotAllowed => HttpResponse::MethodNotAllowed().finish(),
