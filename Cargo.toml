@@ -25,6 +25,7 @@ nats = "0.9.8"
 diesel = { version = "1.4.5", features = ["chrono", "postgres", "r2d2", "uuidv07", "numeric"] }
 # r2d2 = {version = "0.8"}
 #cache
+postgres = "0.19"
 mobc = "0.5"
 mobc-redis = "0.5"
 redis = {version = "0.20", features = ["r2d2"]}
