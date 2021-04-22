@@ -20,6 +20,9 @@ lint:
 	touch src/**
 	cargo clippy --all-targets --all-features -- -D warnings
 
+clippy:
+	@cargo clippy -- -W clippy::all
+
 dev:
 	@cargo run
 
