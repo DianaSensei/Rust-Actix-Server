@@ -1,30 +1,19 @@
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-#[macro_use]
-extern crate validator_derive;
-// #[macro_use]
-// extern crate log;
+#[macro_use] extern crate lazy_static;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde_json;
+#[macro_use] extern crate validator_derive;
+#[macro_use] extern crate log;
 
-#[allow(dead_code)]
-mod config;
-#[allow(dead_code)]
-mod errors;
-#[allow(dead_code)]
-mod services;
-#[allow(dead_code)]
-mod controllers;
-#[allow(dead_code)]
-mod lib;
-#[allow(dead_code)]
-mod model;
-#[allow(dead_code)]
-mod core;
-#[allow(dead_code)]
-mod utils;
+#[allow(dead_code)] mod config;
+#[allow(dead_code)] mod errors;
+#[allow(dead_code)] mod services;
+#[allow(dead_code)] mod controllers;
+#[allow(dead_code)] mod lib;
+#[allow(dead_code)] mod model;
+#[allow(dead_code)] mod core;
+#[allow(dead_code)] mod actors;
+#[allow(dead_code)] mod utils;
+use actix::prelude::*;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -41,7 +30,11 @@ async fn main() -> std::io::Result<()> {
     //     .set_private_key_file("key.pem", SslFiletype::PEM)
     //     .unwrap();
     // builder.set_certificate_chain_file("cert.pem").unwrap();
-
+    let sys = actix::System::new("nats");
+    let bt_actor = SyncArbiter::start(1, move || actors::nats_actor::NatsActor::default());
+    // info!("Wait Ctrl C");
+    tokio::signal::ctrl_c().await.unwrap();
+    info!("Receipt Ctrl C");
     let redis_fac = RedisFactory::create(config::CONFIG.redis_url.to_owned())
         .await
         .expect("Connect Redis Fail");

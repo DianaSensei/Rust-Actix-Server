@@ -6,12 +6,14 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 # [profile.release]
-# lto = true
+# lto = true #thin/off/false
 # opt-level = 2
+[profile.dev]
+split-debuginfo = "unpacked"
 
 [dependencies]
 #framework
-actix = "0.11"
+actix = "0.10"
 actix-web = { version = "3", features = ["openssl"] }
 actix-rt = "1.1.1"
 actix-files = "0.5"
@@ -39,7 +41,7 @@ json = "0.12"
 
 #thread, async
 futures = "0.3"
-tokio = "1.4"
+tokio =  { version = "1.5", features = ["signal"]} 
 failure = "0.1.8"
 
 #mailer

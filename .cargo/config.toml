@@ -20,4 +20,17 @@ rustflags = []#"-Zshare-generics=y"]
 # Optional: Uncommenting the following improves compile times, but reduces the amount of debug info to 'line number tables only'
 # In most cases the gains are negligible, but if you are on macos and have slow compile times you should see significant gains.
 [profile.dev]
-debug = 1
+opt-level = 0
+debug = true
+codegen-units = 256
+debug-assertions = true
+overflow-checks = true
+incremental = true
+panic = 'unwind'
+lto = false
+split-debuginfo = 'unpacked'
+rpath = false
+
+[profile.dev.build-override]
+opt-level = 0
+codegen-units = 256
