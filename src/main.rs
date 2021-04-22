@@ -15,8 +15,8 @@
 #[allow(dead_code)] mod utils;
 use actix::prelude::*;
 
-#[actix_rt::main]
-async fn main() -> std::io::Result<()> {
+// #[actix_rt::main]
+fn main() -> std::io::Result<()> {
     use crate::lib::{nats_broker::*, redis_db::*};
     use crate::services::nats_server;
     // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
@@ -32,21 +32,25 @@ async fn main() -> std::io::Result<()> {
     // builder.set_certificate_chain_file("cert.pem").unwrap();
     let sys = actix::System::new("nats");
     let bt_actor = SyncArbiter::start(1, move || actors::nats_actor::NatsActor::default());
-    // info!("Wait Ctrl C");
-    tokio::signal::ctrl_c().await.unwrap();
+    info!("Wait Ctrl C");
+    println!("aaaa");
+    async {
+        tokio::signal::ctrl_c().await.unwrap();
+    };
     info!("Receipt Ctrl C");
-    let redis_fac = RedisFactory::create(config::CONFIG.redis_url.to_owned())
-        .await
-        .expect("Connect Redis Fail");
-    let nats_fac = NatsFactory::create(config::CONFIG.nats_url.to_owned())
-        .await
-        .expect("Connect Nats Fail");
+    println!("bbbbb");
+    // let redis_fac = RedisFactory::create(config::CONFIG.redis_url.to_owned())
+    //     .await
+    //     .expect("Connect Redis Fail");
+    // let nats_fac = NatsFactory::create(config::CONFIG.nats_url.to_owned())
+    //     .await
+    //     .expect("Connect Nats Fail");
 
-    nats_server::nats_server(nats_fac.clone()).await; //Start Nats server
+    // nats_server::nats_server(nats_fac.clone()).await; //Start Nats server
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            .data(redis_fac.clone()) //Use Redis
-            .data(nats_fac.clone()) //Use Nats
+            // .data(redis_fac.clone()) //Use Redis
+            // .data(nats_fac.clone()) //Use Nats
             .wrap(actix_web::middleware::Logger::default())
             .data(
                 actix_web::web::JsonConfig::default()
@@ -76,13 +80,14 @@ async fn main() -> std::io::Result<()> {
             .default_service(actix_web::web::route().to(|| actix_web::HttpResponse::MethodNotAllowed()))
     });
 
-    server = if let Some(l) = listenfd::ListenFd::from_env().take_tcp_listener(0)? {
-        server.listen(l)?
-    } else {
-        // server.bind_openssl(&config::CONFIG.server, builder)?
-        server.bind(&config::CONFIG.server)?
-    };
-    server.run().await
+    // server = if let Some(l) = listenfd::ListenFd::from_env().take_tcp_listener(0)? {
+    //     server.listen(l)?
+    // } else {
+    //     // server.bind_openssl(&config::CONFIG.server, builder)?
+    //     server.bind(&config::CONFIG.server)?
+    // };
+    // server.run();
+    sys.run()
 }
 
 fn setup_log() {
