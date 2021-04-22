@@ -1,29 +1,44 @@
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate serde_derive;
-#[macro_use] extern crate serde_json;
-#[macro_use] extern crate validator_derive;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate serde_json;
+#[macro_use]
+extern crate validator_derive;
+#[macro_use]
+extern crate log;
 
-#[allow(dead_code)] mod config;
-#[allow(dead_code)] mod errors;
-#[allow(dead_code)] mod services;
-#[allow(dead_code)] mod controllers;
-#[allow(dead_code)] mod lib;
-#[allow(dead_code)] mod model;
-#[allow(dead_code)] mod core;
-#[allow(dead_code)] mod actors;
-#[allow(dead_code)] mod utils;
+#[allow(dead_code)]
+mod config;
+#[allow(dead_code)]
+mod errors;
+#[allow(dead_code)]
+mod services;
+#[allow(dead_code)]
+mod controllers;
+#[allow(dead_code)]
+mod lib;
+#[allow(dead_code)]
+mod model;
+#[allow(dead_code)]
+mod core;
+#[allow(dead_code)]
+mod actors;
+#[allow(dead_code)]
+mod utils;
+
 use actix::prelude::*;
 
 // #[actix_rt::main]
 fn main() -> std::io::Result<()> {
-    use crate::lib::{nats_broker::*, redis_db::*};
-    use crate::services::nats_server;
+    // use crate::lib::{nats_broker::*, redis_db::*};
+    // use crate::services::nats_server;
     // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
     use actix_web::middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers};
     use actix_files::Files;
     setup_log();
-    
+
     // let mut builder =
     //     SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
     // builder
@@ -32,13 +47,9 @@ fn main() -> std::io::Result<()> {
     // builder.set_certificate_chain_file("cert.pem").unwrap();
     let sys = actix::System::new("nats");
     let bt_actor = SyncArbiter::start(1, move || actors::nats_actor::NatsActor::default());
-    info!("Wait Ctrl C");
-    println!("aaaa");
-    async {
-        tokio::signal::ctrl_c().await.unwrap();
-    };
-    info!("Receipt Ctrl C");
-    println!("bbbbb");
+    // async {
+        // tokio::signal::ctrl_c().await.unwrap();
+    // };
     // let redis_fac = RedisFactory::create(config::CONFIG.redis_url.to_owned())
     //     .await
     //     .expect("Connect Redis Fail");
@@ -61,7 +72,7 @@ fn main() -> std::io::Result<()> {
                             err,
                             actix_web::HttpResponse::BadRequest().finish(),
                         )
-                        .into()
+                            .into()
                     }),
             )
             .wrap(ErrorHandlers::new().handler(
@@ -91,8 +102,23 @@ fn main() -> std::io::Result<()> {
 }
 
 fn setup_log() {
+    use std::io::Write;
     dotenv::dotenv().ok();
-    std::env::set_var("RUST_LOG", "actix_web=info,actix_server=info");
+    std::env::set_var("RUST_LOG", "trace, actix_web=info, actix_server=info");
+    std::env::set_var("RUST_LOG_STYLE", "always");
     // std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
+        .format(|buf, record| {
+            let module = record.module_path().unwrap();
+            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+            let mut level_style = buf.default_level_style(record.level());
+            level_style.set_bold(true).set_intense(true);
+            writeln!(buf, "[{}][{:?}-{}][{}][{}] {}",
+                     timestamp,
+                     std::thread::current().id(),
+                     std::process::id(),
+                     level_style.value(record.level()),
+                     module,
+                     record.args())
+        }).init();
 }
