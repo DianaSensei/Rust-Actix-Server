@@ -30,8 +30,8 @@ mod utils;
 
 use actix::prelude::*;
 
-// #[actix_rt::main]
-fn main() -> std::io::Result<()> {
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
     // use crate::lib::{nats_broker::*, redis_db::*};
     // use crate::services::nats_server;
     // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
@@ -45,19 +45,8 @@ fn main() -> std::io::Result<()> {
     //     .set_private_key_file("key.pem", SslFiletype::PEM)
     //     .unwrap();
     // builder.set_certificate_chain_file("cert.pem").unwrap();
-    let sys = actix::System::new("nats");
-    let bt_actor = SyncArbiter::start(1, move || actors::nats_actor::NatsActor::default());
-    // async {
-        // tokio::signal::ctrl_c().await.unwrap();
-    // };
-    // let redis_fac = RedisFactory::create(config::CONFIG.redis_url.to_owned())
-    //     .await
-    //     .expect("Connect Redis Fail");
-    // let nats_fac = NatsFactory::create(config::CONFIG.nats_url.to_owned())
-    //     .await
-    //     .expect("Connect Nats Fail");
-
-    // nats_server::nats_server(nats_fac.clone()).await; //Start Nats server
+    // let sys = actix::System::new("nats");
+    let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::default);
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
             // .data(redis_fac.clone()) //Use Redis
@@ -88,23 +77,22 @@ fn main() -> std::io::Result<()> {
             ))
             // .configure(app::routes::init_route)
             .service(Files::new("/images", "static/images/").show_files_listing())
-            .default_service(actix_web::web::route().to(|| actix_web::HttpResponse::MethodNotAllowed()))
+            .default_service(actix_web::web::route().to(actix_web::HttpResponse::MethodNotAllowed))
     });
 
     // server = if let Some(l) = listenfd::ListenFd::from_env().take_tcp_listener(0)? {
-    //     server.listen(l)?
+        // server.listen(l)?
     // } else {
-    //     // server.bind_openssl(&config::CONFIG.server, builder)?
-    //     server.bind(&config::CONFIG.server)?
+        // server.bind_openssl(&config::CONFIG.server, builder)?
+    server.bind(&config::CONFIG.server).unwrap().run().await
     // };
-    // server.run();
-    sys.run()
+    // server.run().await
 }
 
 fn setup_log() {
     use std::io::Write;
     dotenv::dotenv().ok();
-    std::env::set_var("RUST_LOG", "trace, actix_web=info, actix_server=info");
+    std::env::set_var("RUST_LOG", "info, actix_web=info, actix_server=info");
     std::env::set_var("RUST_LOG_STYLE", "always");
     // std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
