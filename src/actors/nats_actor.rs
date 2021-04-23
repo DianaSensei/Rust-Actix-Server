@@ -11,15 +11,15 @@ impl Message for NatsTask {
 pub struct NatsActor;
 
 impl Actor for NatsActor {
-    type Context = SyncContext<Self>;
-    fn started(&mut self, _: &mut SyncContext<Self>) {
+    type Context = Context<Self>;
+    fn started(&mut self, _: &mut Context<Self>) {
         info!("Nats Actor started up");
     }
 }
 
 impl Handler<NatsTask> for NatsActor {
     type Result = ();
-    fn handle(&mut self, _: NatsTask, _: &mut SyncContext<Self>){
+    fn handle(&mut self, _: NatsTask, _: &mut Context<Self>){
         info!("Start Handle Nats Task");
         thread::sleep(time::Duration::new(4,0));
         info!("Finished Nats Task");

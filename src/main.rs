@@ -32,25 +32,31 @@ use actix::prelude::*;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    // use crate::lib::{nats_broker::*, redis_db::*};
-    // use crate::services::nats_server;
+    use actix::SyncArbiter;
+    // use actor::reader::ReaderActor;
     // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
-    use actix_web::middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers};
+    use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
     use actix_files::Files;
     setup_log();
-
     // let mut builder =
     //     SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
     // builder
     //     .set_private_key_file("key.pem", SslFiletype::PEM)
     //     .unwrap();
     // builder.set_certificate_chain_file("cert.pem").unwrap();
-    // let sys = actix::System::new("nats");
-    let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::default);
+    // let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::default);
+    // let mut natActorAddr;
+    // let exe = async {
+    //     let natActorAddr = actors::nats_actor::NatsActor.start();
+    //     natActorAddr.do_send(actors::nats_actor::NatsTask{});
+    //     natActorAddr.do_send(actors::nats_actor::NatsTask{});
+    // };
+    // actix_rt::Arbiter::spawn(exe);
+
+    // natActorAddr.do_send(actors::nats_actor::NatsTask{});
+    // natActorAddr.do_send(actors::nats_actor::NatsTask{});
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            // .data(redis_fac.clone()) //Use Redis
-            // .data(nats_fac.clone()) //Use Nats
             .wrap(actix_web::middleware::Logger::default())
             .data(
                 actix_web::web::JsonConfig::default()

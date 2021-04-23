@@ -1,16 +1,81 @@
 use crate::model::nats_message::*;
 use crate::model::*;
 use crate::lib::nats_broker::*;
-
+use actix::prelude::*;
 use chrono::Utc;
 use std::collections::HashMap;
-pub async fn nats_server(nats_conn: NatsConnection) {
+use serde_json::{Value as Json};
+use crate::config;
+
+struct NatsActor {
+    // conn: NatsConnection,
+    // topic: String
+}
+#[derive(Message)]
+#[rtype(result = "usize")]
+struct Value(usize, usize);
+
+// impl Json for Value {
+
+// }
+impl NatsActor {
+        pub async fn subscribe(topic: String) {
+        let conn = NatsFactory::create(config::CONFIG.nats_url.to_owned())
+        .await
+        .expect("Connect Nats Fail");
+        match NatsServer::queue_subscribe(conn, topic.to_owned(), "".to_string()).await {
+                    Ok(sub) => {
+            println!("Consumer: `{}` ready", topic.clone());
+            sub.with_handler(move |msg| {
+                // let nats_req = NatsRequest::from(msg.clone());
+                // let res = futures::executor::block_on(hello());
+                // let nats_res = match res {
+                //     Ok(user) => {
+                //         resp_nats(
+                //         nats_req,
+                //         "resp_create_user".to_owned(),
+                //         serde_json::to_value(&user).unwrap(),
+                //         true,
+                //         0,
+                //         "Ok".to_owned(),
+                //     )
+                // },
+                //     Err(e) => resp_nats(
+                //         nats_req,
+                //         "create_user".to_owned(),
+                //         json!({}),
+                //         false,
+                //         -1,
+                //         e.to_string(),
+                //     ),
+                // };
+                msg.respond("")
+            });
+        }
+        Err(e) => {
+            println!(
+                "[NATS][FAIL] Create subscriber for topic:`{}` fail | {}",
+                topic, e
+            );
+        }
+    }
+        // actix_rt::spawn(call);
+        // NatsActor { conn, topic}
+    }
+}
+
+impl Actor for NatsActor {
+    type Context = Context<Self>;
+}
+
+pub async fn start_nats_server(nats_conn: NatsConnection) {
     create_users_topic("user.create".to_owned(), nats_conn).await;
 }
 
 async fn create_users_topic(topic: String, nats_conn: NatsConnection) {
     match NatsServer::queue_subscribe(nats_conn, topic.to_owned(), "".to_string()).await {
         Ok(sub) => {
+            println!("Consumer: `{}` ready", topic.clone());
             sub.with_handler(move |msg| {
                 // let nats_req = NatsRequest::from(msg.clone());
                 // let res = futures::executor::block_on(hello());
