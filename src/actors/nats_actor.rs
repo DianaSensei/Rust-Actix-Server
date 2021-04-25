@@ -1,5 +1,6 @@
 use actix::prelude::*;
 use std::{thread, time};
+use crate::lib::nats_broker::*;
 
 #[derive(Default)]
 pub struct NatsTask;
@@ -13,6 +14,13 @@ pub struct NatsActor;
 impl Actor for NatsActor {
     type Context = Context<Self>;
     fn started(&mut self, _: &mut Context<Self>) {
+        // let fut = async move {
+        //     cmd
+        //         .query_async(&mut con)
+        //         .await
+        // };
+        // Box::pin(fut)
+
         info!("Nats Actor started up");
     }
 }
