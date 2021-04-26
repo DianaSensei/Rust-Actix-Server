@@ -18,7 +18,8 @@ actix-web = { version = "=4.0.0-beta.5", features = ["openssl"] }
 actix-service = "=2.0.0-beta.5"
 actix-rt = "2.2.0"
 actix-files = "0.6.0-beta.4"
-
+actix-cors = "0.6.0-beta.1"
+actix-session = "0.5.0-beta.1"
 #message broker
 nats = "0.9.8"
 
@@ -45,6 +46,7 @@ json = "0.12"
 futures = "0.3"
 tokio =  { version = "1.5", features = ["signal"]} 
 failure = "0.1.8"
+pin-project = "1.0.7"
 
 #mailer
 lettre = "0.9"
@@ -61,6 +63,7 @@ chrono = { version = "0.4", features = ["serde"] }
 libreauth = "0.14"
 base64 = "0.13"
 openssl = { version = "0.10" }
+jsonwebtoken = "8.0.0-beta.2"
 
 #util
 once_cell = "1.5"

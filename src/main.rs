@@ -20,6 +20,8 @@ mod controllers;
 #[allow(dead_code)]
 mod lib;
 #[allow(dead_code)]
+mod middleware;
+#[allow(dead_code)]
 mod model;
 #[allow(dead_code)]
 mod core;
@@ -33,9 +35,10 @@ use actix::prelude::*;
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     use actix::SyncArbiter;
-    // use actor::reader::ReaderActor;
+    use actix_cors::Cors;
     // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
     use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
+    use actix_web::http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT};
     use actix_files::Files;
     setup_log();
     // let mut builder =
@@ -44,7 +47,7 @@ async fn main() -> std::io::Result<()> {
     //     .set_private_key_file("key.pem", SslFiletype::PEM)
     //     .unwrap();
     // builder.set_certificate_chain_file("cert.pem").unwrap();
-    let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::default);
+    // let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::);
     // let exe = async {
     //     let natActorAddr = actors::nats_actor::NatsActor.start();
     // };
@@ -56,12 +59,23 @@ async fn main() -> std::io::Result<()> {
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
             .wrap(actix_web::middleware::Logger::default())
-            .data(natActorAddr)
+            .wrap(actix_web::middleware::Compress::default())
+            .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
+            .wrap(middleware::preRequest::PreRequest)
+            .wrap(middleware::posRequest::PosRequest)
+            .wrap(
+                Cors::default()
+                    .send_wildcard()
+                    .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE, ACCEPT])
+                    .supports_credentials()
+                    .max_age(3600)
+            )
+            // .data(natActorAddr)
             .data(
                 actix_web::web::JsonConfig::default()
                     .limit(4096)
                     .error_handler(|err, _req| {
-                        println!("Parse Json fail!: {:?}", err);
+                        error!("Parse Json Fail!: {:?}", err);
                         actix_web::error::InternalError::from_response(
                             err,
                             actix_web::HttpResponse::BadRequest().finish(),
@@ -72,16 +86,16 @@ async fn main() -> std::io::Result<()> {
             .wrap(ErrorHandlers::new().handler(
                 actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
                 |mut res| {
-                    res.response_mut().headers_mut().insert(
-                        actix_web::http::header::CONTENT_TYPE,
-                        actix_web::http::HeaderValue::from_static("Error"),
-                    );
+                    // res.response_mut().headers_mut().insert(
+                    //     actix_web::http::header::CONTENT_TYPE,
+                    //     actix_web::http::HeaderValue::from_static("application/json")
+                    // );
                     dbg!("ErrorHandlers detect!");
                     Ok(ErrorHandlerResponse::Response(res))
                 },
             ))
             // .configure(app::routes::init_route)
-            .service(Files::new("/images", "static/images/").show_files_listing())
+            .service(Files::new("static/images", "static/images/").show_files_listing())
             .default_service(actix_web::web::route().to(actix_web::HttpResponse::MethodNotAllowed))
     });
 

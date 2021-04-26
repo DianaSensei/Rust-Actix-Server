@@ -1,0 +1,21 @@
+[workspace]
+members = [
+    "Started"
+]
+
+[profile.release]
+debug = false
+
+
+# [[bin]]
+# name = "started"
+# path = "Started/src/main.rs"
+
+# [[bin]]
+# name = "rabbitmq"
+# path = "RabbitQueue/src/main.rs"
+
+# [lib]
+# name = "mylib"
+# path = "Elastic/src/main.rs"
+

@@ -1,4 +1,4 @@
 pub mod response;
-pub mod users;
+pub mod database;
 pub mod nats_message;
-pub use self::{users::*, nats_message::*, response::*};
+pub use self::{nats_message::*, response::*};
