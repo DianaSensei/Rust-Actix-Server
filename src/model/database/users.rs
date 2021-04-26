@@ -1,7 +1,11 @@
-// use chrono::{Utc};
-// use crate::utils::hasher::HASHER;
+use diesel::prelude::*;
+use diesel::Insertable;
+use diesel::Identifiable;
+use diesel::SaveChangesDsl;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, AsChangeset, Identifiable, Insertable, Debug, Clone)]
+#[table_name = "users"]
 pub struct User {
     pub id: String,
     pub email: String,
@@ -17,15 +21,6 @@ pub struct User {
     pub status: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Validate, Clone)]
-pub struct Login {
-    #[validate(email(message = "email is not valid"))]
-    pub email: String,
-    #[validate(length(min = 8, message = "password must be at least 8 characters"))]
-    pub password: String,
-    #[serde(default)]
-    pub remember_me: bool,
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {

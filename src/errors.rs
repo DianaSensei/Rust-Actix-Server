@@ -8,7 +8,7 @@ pub enum ServerError {
     #[fail(display = "No content")]
     NoContent,
     #[fail(display = "Bad Request")]
-    BadRequest(String),
+    BadRequest(Json),
     #[fail(display = "Blocking Error")]
     BlockingError(String),
     #[fail(display = "Not Found")]
@@ -51,6 +51,19 @@ impl From<Vec<String>> for ErrorResponse {
     }
 }
 impl ResponseError for ServerError {
+    fn status_code(&self) -> StatusCode {
+        match *self {
+            ServerError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            ServerError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+            ServerError::DBError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ServerError::BadGateway => StatusCode::BAD_GATEWAY,
+            ServerError::NotFound(_) => StatusCode::NOT_FOUND,
+            ServerError::RequestTimeOut => StatusCode::REQUEST_TIMEOUT,
+            ServerError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            ServerError::Conflict => StatusCode::CONFLICT,
+            _ => StatusCode::OK,
+        }
+    }
     fn error_response(&self) -> HttpResponse {
         match self {
             ServerError::BadRequest(err) => HttpResponse::BadRequest().json(err),
@@ -69,19 +82,6 @@ impl ResponseError for ServerError {
             _ => HttpResponse::InternalServerError().finish(),
         }
     }
-    fn status_code(&self) -> StatusCode {
-        match *self {
-            ServerError::BadRequest(_) => StatusCode::BAD_REQUEST,
-            ServerError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
-            ServerError::DBError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            ServerError::BadGateway => StatusCode::BAD_GATEWAY,
-            ServerError::NotFound(_) => StatusCode::NOT_FOUND,
-            ServerError::RequestTimeOut => StatusCode::REQUEST_TIMEOUT,
-            ServerError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
-            ServerError::Conflict => StatusCode::CONFLICT,
-            _ => StatusCode::OK,
-        }
-    }
 }
 
 impl From<ValidationErrors> for ServerError {
@@ -97,21 +97,19 @@ impl From<ValidationErrors> for ServerError {
             err_map.insert(field.to_string(), json!(errors));
         }
 
-        ServerError::UnprocessableEntity(json!({
-            "errors": err_map,
-        }))
+        ServerError::BadRequest(json!(err_map))
     }
 }
-pub fn json_error_handler(err: error::JsonPayloadError, _req: &HttpRequest) -> error::Error {
-    use actix_web::error::JsonPayloadError;
-
-    let detail = err.to_string();
-    let resp = match &err {
-        JsonPayloadError::ContentType => HttpResponse::UnsupportedMediaType().body(detail),
-        JsonPayloadError::Deserialize(json_err) if json_err.is_data() => {
-            HttpResponse::UnprocessableEntity().body(detail)
-        }
-        _ => HttpResponse::BadRequest().body(detail),
-    };
-    error::InternalError::from_response(err, resp).into()
-}
+// pub fn json_error_handler(err: error::JsonPayloadError, _req: &HttpRequest) -> error::Error {
+//     use actix_web::error::JsonPayloadError;
+//
+//     let detail = err.to_string();
+//     let resp = match &err {
+//         JsonPayloadError::ContentType => HttpResponse::UnsupportedMediaType().body(detail),
+//         JsonPayloadError::Deserialize(json_err) if json_err.is_data() => {
+//             HttpResponse::UnprocessableEntity().body(detail)
+//         }
+//         _ => HttpResponse::BadRequest().body(detail),
+//     };
+//     error::InternalError::from_response(err, resp).into()
+// }

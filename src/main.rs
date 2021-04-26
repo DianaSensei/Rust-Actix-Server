@@ -8,6 +8,8 @@ extern crate serde_json;
 extern crate validator_derive;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate diesel;
 
 #[allow(dead_code)]
 mod config;
@@ -58,7 +60,7 @@ async fn main() -> std::io::Result<()> {
     // natActorAddr.do_send(actors::nats_actor::NatsTask{});
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            .wrap(actix_web::middleware::Logger::default())
+            // .wrap(actix_web::middleware::Logger::default())
             .wrap(actix_web::middleware::Compress::default())
             .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
             .wrap(middleware::preRequest::PreRequest)
@@ -79,8 +81,7 @@ async fn main() -> std::io::Result<()> {
                         actix_web::error::InternalError::from_response(
                             err,
                             actix_web::HttpResponse::BadRequest().finish(),
-                        )
-                            .into()
+                        ).into()
                     }),
             )
             .wrap(ErrorHandlers::new().handler(
@@ -99,13 +100,13 @@ async fn main() -> std::io::Result<()> {
             .default_service(actix_web::web::route().to(actix_web::HttpResponse::MethodNotAllowed))
     });
 
-    // server = if let Some(l) = listenfd::ListenFd::from_env().take_tcp_listener(0)? {
-        // server.listen(l)?
-    // } else {
+    server = if let Some(l) = listenfd::ListenFd::from_env().take_tcp_listener(0)? {
+        server.listen(l)?
+    } else {
         // server.bind_openssl(&config::CONFIG.server, builder)?
-    server.bind(&config::CONFIG.server).unwrap().run().await
-    // };
-    // server.run().await
+        server.bind(&config::CONFIG.server)?
+    };
+    server.run().await
 }
 
 fn setup_log() {
