@@ -44,20 +44,19 @@ async fn main() -> std::io::Result<()> {
     //     .set_private_key_file("key.pem", SslFiletype::PEM)
     //     .unwrap();
     // builder.set_certificate_chain_file("cert.pem").unwrap();
-    // let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::default);
-    // let mut natActorAddr;
+    let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::default);
     // let exe = async {
     //     let natActorAddr = actors::nats_actor::NatsActor.start();
-    //     natActorAddr.do_send(actors::nats_actor::NatsTask{});
-    //     natActorAddr.do_send(actors::nats_actor::NatsTask{});
     // };
-    // actix_rt::Arbiter::spawn(exe);
-
+    // actix_rt::Arbiter::spawn(async move {
+    //     actors::nats_actor::NatsActor.start();
+    // });
     // natActorAddr.do_send(actors::nats_actor::NatsTask{});
     // natActorAddr.do_send(actors::nats_actor::NatsTask{});
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
             .wrap(actix_web::middleware::Logger::default())
+            .data(natActorAddr)
             .data(
                 actix_web::web::JsonConfig::default()
                     .limit(4096)

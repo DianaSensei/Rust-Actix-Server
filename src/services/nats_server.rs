@@ -20,7 +20,7 @@ struct Value(usize, usize);
 // }
 impl NatsActor {
         pub async fn subscribe(topic: String) {
-        let conn = NatsFactory::create(config::CONFIG.nats_url.to_owned())
+        let conn = NatsServer::connect(config::CONFIG.nats_url.to_owned())
         .await
         .expect("Connect Nats Fail");
         match NatsServer::queue_subscribe(conn, topic.to_owned(), "".to_string()).await {
