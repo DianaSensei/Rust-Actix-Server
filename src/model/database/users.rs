@@ -1,10 +1,8 @@
-use diesel::prelude::*;
 use diesel::Insertable;
 use diesel::Identifiable;
-use diesel::SaveChangesDsl;
 use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, AsChangeset, Identifiable, Insertable, Debug, Clone)]
+use super::schema::users;
+#[derive(Serialize, Deserialize, Queryable, Identifiable, Debug, Clone)]
 #[table_name = "users"]
 pub struct User {
     pub id: String,
@@ -18,7 +16,6 @@ pub struct User {
     pub created_time_dt: i64,
     pub updated_by: String,
     pub updated_time_dt: i64,
-    pub status: i32,
 }
 
 
