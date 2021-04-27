@@ -9,6 +9,7 @@ use actix_web::web::{Bytes, BytesMut};
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error};
 use futures::future::{ok, Ready};
 use pin_project::__private::PinnedDrop;
+use futures::StreamExt;
 
 pub struct PosRequest;
 
@@ -73,9 +74,9 @@ where
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let res = futures::ready!(self.project().fut.poll(cx));
-
         Poll::Ready(res.map(|res| {
             res.map_body(move |_, body| {
+                // info!("Response {:?}", body.tak);
                 ResponseBody::Body(BodyLogger {
                     body,
                     body_accum: BytesMut::new(),
@@ -95,7 +96,10 @@ pub struct BodyLogger<B> {
 #[pin_project::pinned_drop]
 impl<B> PinnedDrop for BodyLogger<B> {
     fn drop(self: Pin<&mut Self>) {
-        info!("Response body: {:#?}", self.body_accum);
+        info!("drop");
+        // let data = self.
+        // let json: serde_json::Value = serde_json::from_slice(&*bytes).unwrap();
+        // info!("Response body: {:#?}", json);
     }
 }
 
@@ -106,15 +110,19 @@ impl<B: MessageBody> MessageBody for BodyLogger<B> {
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Result<Bytes, Error>>> {
         let this = self.project();
-
         match this.body.poll_next(cx) {
             Poll::Ready(Some(Ok(chunk))) => {
-                this.body_accum.extend_from_slice(&chunk);
                 Poll::Ready(Some(Ok(chunk)))
             }
-            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
-            Poll::Ready(None) => Poll::Ready(None),
-            Poll::Pending => Poll::Pending,
+            Poll::Ready(Some(Err(e))) => {
+                Poll::Ready(Some(Err(e)))
+            },
+            Poll::Ready(None) => {
+                Poll::Ready(None)
+            },
+            Poll::Pending => {
+                Poll::Pending
+            },
         }
     }
 }

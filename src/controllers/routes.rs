@@ -44,6 +44,7 @@ async fn get_health(_pool: web::Data<RedisFactory>,
 async fn set_health_wait2() -> HttpResponse {
     // let _res = set_str(&pool.pool, "abc", "1234", 0).await.unwrap();
     // std::thread::sleep(std::time::Duration::from_secs(10));
+    info!("Inside");
     HttpResponse::Ok().json(HealthResponse {
         status: "Ok".into(),
         version: "Cargo Version: 2".to_string() + env!("CARGO_PKG_VERSION").into(),

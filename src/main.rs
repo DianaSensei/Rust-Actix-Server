@@ -60,7 +60,6 @@ async fn main() -> std::io::Result<()> {
     // natActorAddr.do_send(actors::nats_actor::NatsTask{});
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            // .wrap(actix_web::middleware::Logger::default())
             .wrap(actix_web::middleware::Compress::default())
             .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
             .wrap(middleware::preRequest::PreRequest)
@@ -87,15 +86,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(ErrorHandlers::new().handler(
                 actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
                 |mut res| {
-                    // res.response_mut().headers_mut().insert(
-                    //     actix_web::http::header::CONTENT_TYPE,
-                    //     actix_web::http::HeaderValue::from_static("application/json")
-                    // );
-                    dbg!("ErrorHandlers detect!");
+                    error!("ErrorHandlers detect!");
                     Ok(ErrorHandlerResponse::Response(res))
                 },
             ))
-            // .configure(app::routes::init_route)
+            .configure(controllers::routes::init_route)
             .service(Files::new("static/images", "static/images/").show_files_listing())
             .default_service(actix_web::web::route().to(actix_web::HttpResponse::MethodNotAllowed))
     });

@@ -51,7 +51,11 @@ where
     }
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        info!("Request: {:?}", req);
+        info!("path:{:#?} {:#?}{:#?}", req.method(), req.path(), req.query_string());
+        info!("version:{:#?}", req.version());
+        for (name, value) in req.headers().into_iter() {
+            info!("{}:{:#?}", name, value);
+        }
         let mut svc = self.service.clone();
 
         Box::pin(async move {
@@ -63,11 +67,9 @@ where
             let json: serde_json::Value = serde_json::from_slice(&*body).unwrap();
             // let newBody: Stream  = serde_json::to_value(json).unwrap();
             let request = ServiceRequest::from(req);
-            println!("Request body: {}", json);
+            info!("body:{}", json);
             // Wait for next process
             let res = svc.call(request).await?;
-
-            println!("Response Head: {:#?}", res.headers());
             Ok(res)
         })
     }
