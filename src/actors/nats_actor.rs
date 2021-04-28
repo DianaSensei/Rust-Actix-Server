@@ -1,7 +1,6 @@
 use actix::prelude::*;
 use std::{thread, time};
 use crate::lib::nats_broker::*;
-use std::borrow::Borrow;
 
 #[derive(Default)]
 pub struct NatsTask;

@@ -1,4 +1,4 @@
-use crate::config::CONFIG;
+// use crate::config::CONFIG;
 use actix_web::error::ErrorUnauthorized;
 use actix_web::{dev, Error, FromRequest, HttpRequest};
 use futures::future::{err, ok, Ready};
@@ -9,7 +9,7 @@ pub struct AuthorizationService;
 impl FromRequest for AuthorizationService {
     type Config = ();
     type Error = Error;
-    type Future = Ready<Result<AuthorizationService, Error>>;
+    type Future = Ready<Result<Self, Error>>;
     fn from_request(req: &HttpRequest, _payload: &mut dev::Payload) -> Self::Future {
         let auth = req.headers().get("Authorization");
         match auth {

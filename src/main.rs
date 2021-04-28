@@ -32,11 +32,12 @@ mod actors;
 #[allow(dead_code)]
 mod utils;
 
-use actix::prelude::*;
+
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    use actix::SyncArbiter;
+    // use actix::SyncArbiter;
+    // use actix::prelude::*;
     use actix_cors::Cors;
     // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
     use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
@@ -62,8 +63,7 @@ async fn main() -> std::io::Result<()> {
         actix_web::App::new()
             .wrap(actix_web::middleware::Compress::default())
             .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
-            .wrap(middleware::preRequest::PreRequest)
-            .wrap(middleware::posRequest::PosRequest)
+            .wrap(middleware::pre_request::PreRequest)
             .wrap(
                 Cors::default()
                     .send_wildcard()
@@ -85,7 +85,7 @@ async fn main() -> std::io::Result<()> {
             )
             .wrap(ErrorHandlers::new().handler(
                 actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-                |mut res| {
+                |res| {
                     error!("ErrorHandlers detect!");
                     Ok(ErrorHandlerResponse::Response(res))
                 },
@@ -106,22 +106,36 @@ async fn main() -> std::io::Result<()> {
 
 fn setup_log() {
     use std::io::Write;
+    use env_logger::fmt::Color;
+    use env_logger::fmt::Formatter;
     dotenv::dotenv().ok();
     std::env::set_var("RUST_LOG", "info, actix_web=info, actix_server=info");
     std::env::set_var("RUST_LOG_STYLE", "always");
     // std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
         .format(|buf, record| {
-            let module = record.module_path().unwrap();
+            let module_split = record.module_path().unwrap().split("::");
+            let count = module_split.clone().count();
+            let mut module_short = String::new();
+            for (pos, module) in module_split.enumerate() {
+                if pos == count - 1 {
+                    module_short.push_str(module);
+                } else {
+                    module_short.push(module.chars().next().unwrap());
+                    module_short.push_str("::");
+                }
+            }
+            let mut module_style = buf.style();
+            module_style.set_color(Color::Magenta);
             let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
             let mut level_style = buf.default_level_style(record.level());
             level_style.set_bold(true).set_intense(true);
-            writeln!(buf, "[{}][{:?}-{}][{}][{}] {}",
+            writeln!(buf, "{} {} [{:?}-{}][{}]: {}",
                      timestamp,
+                     level_style.value(record.level()),
                      std::thread::current().id(),
                      std::process::id(),
-                     level_style.value(record.level()),
-                     module,
+                     module_style.value(module_short),
                      record.args())
         }).init();
 }

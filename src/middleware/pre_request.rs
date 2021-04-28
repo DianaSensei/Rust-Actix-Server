@@ -7,8 +7,6 @@ use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage};
 use futures::future::{ok, Future, Ready};
 use actix_web::web::BytesMut;
 use futures::StreamExt;
-use std::borrow::{Borrow, BorrowMut};
-use std::ops::Deref;
 
 pub struct PreRequest;
 
@@ -51,12 +49,13 @@ where
     }
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        info!("path:{:#?} {:#?}{:#?}", req.method(), req.path(), req.query_string());
+        info!("path:{:#?} {:#?}", req.method(), req.path());
+        info!("query:{:#?}", req.query_string());
         info!("version:{:#?}", req.version());
-        for (name, value) in req.headers().into_iter() {
-            info!("{}:{:#?}", name, value);
+        for (key, value) in req.headers().into_iter() {
+            info!("{}:{:#?}", key, value);
         }
-        let mut svc = self.service.clone();
+        let svc = self.service.clone();
 
         Box::pin(async move {
             let mut body = BytesMut::new();

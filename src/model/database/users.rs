@@ -1,4 +1,4 @@
-use diesel::Insertable;
+// use diesel::Insertable;
 use diesel::Identifiable;
 use serde::{Deserialize, Serialize};
 use super::schema::users;
