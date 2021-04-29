@@ -14,8 +14,6 @@ extern crate diesel;
 #[allow(dead_code)]
 mod config;
 #[allow(dead_code)]
-mod errors;
-#[allow(dead_code)]
 mod services;
 #[allow(dead_code)]
 mod controllers;
