@@ -1,5 +1,4 @@
-// use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
+
 
 #[derive(Serialize, Deserialize, Debug, Validate, Clone)]
 pub struct Login {

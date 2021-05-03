@@ -29,7 +29,8 @@ mod core;
 mod actors;
 #[allow(dead_code)]
 mod utils;
-
+#[allow(dead_code)]
+mod repository;
 
 
 #[actix_rt::main]
