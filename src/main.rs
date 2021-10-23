@@ -13,36 +13,36 @@ extern crate diesel;
 
 #[allow(dead_code)]
 mod config;
-#[allow(dead_code)]
-mod services;
-#[allow(dead_code)]
-mod controllers;
-#[allow(dead_code)]
-mod lib;
-#[allow(dead_code)]
-mod middleware;
-#[allow(dead_code)]
-mod model;
-#[allow(dead_code)]
-mod core;
-#[allow(dead_code)]
-mod actors;
-#[allow(dead_code)]
-mod utils;
-#[allow(dead_code)]
-mod repository;
+// #[allow(dead_code)]
+// mod services;
+// #[allow(dead_code)]
+// mod controllers;
+// #[allow(dead_code)]
+// mod lib;
+// #[allow(dead_code)]
+// mod middleware;
+// #[allow(dead_code)]
+// mod model;
+// #[allow(dead_code)]
+// mod core;
+// #[allow(dead_code)]
+// mod actors;
+// #[allow(dead_code)]
+// mod utils;
+// #[allow(dead_code)]
+// mod repository;
 
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     // use actix::SyncArbiter;
     // use actix::prelude::*;
-    use actix_cors::Cors;
+    // use actix_cors::Cors;
     // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
-    use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
-    use actix_web::http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT};
-    use actix_files::Files;
-    setup_log();
+    // use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
+    // use actix_web::http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT};
+    // use actix_files::Files;
+    // setup_log();
     // let mut builder =
     //     SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
     // builder
@@ -60,37 +60,37 @@ async fn main() -> std::io::Result<()> {
     // natActorAddr.do_send(actors::nats_actor::NatsTask{});
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            .wrap(actix_web::middleware::Compress::default())
-            .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
-            .wrap(middleware::pre_request::PreRequest)
-            .wrap(
-                Cors::default()
-                    .send_wildcard()
-                    .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE, ACCEPT])
-                    .supports_credentials()
-                    .max_age(3600)
-            )
+            // .wrap(actix_web::middleware::Compress::default())
+            // .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
+            // .wrap(middleware::pre_request::PreRequest)
+            // .wrap(
+            //     Cors::default()
+            //         .send_wildcard()
+            //         .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE, ACCEPT])
+            //         .supports_credentials()
+            //         .max_age(3600)
+            // )
             // .data(natActorAddr)
-            .data(
-                actix_web::web::JsonConfig::default()
-                    .limit(4096)
-                    .error_handler(|err, _req| {
-                        error!("Parse Json Fail!: {:?}", err);
-                        actix_web::error::InternalError::from_response(
-                            err,
-                            actix_web::HttpResponse::BadRequest().finish(),
-                        ).into()
-                    }),
-            )
-            .wrap(ErrorHandlers::new().handler(
-                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-                |res| {
-                    error!("ErrorHandlers detect!");
-                    Ok(ErrorHandlerResponse::Response(res))
-                },
-            ))
-            .configure(controllers::routes::init_route)
-            .service(Files::new("static/images", "static/images/").show_files_listing())
+            // .data(
+            //     actix_web::web::JsonConfig::default()
+            //         .limit(4096)
+            //         .error_handler(|err, _req| {
+            //             error!("Parse Json Fail!: {:?}", err);
+            //             actix_web::error::InternalError::from_response(
+            //                 err,
+            //                 actix_web::HttpResponse::BadRequest().finish(),
+            //             ).into()
+            //         }),
+            // )
+            // .wrap(ErrorHandlers::new().handler(
+            //     actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            //     |res| {
+            //         error!("ErrorHandlers detect!");
+            //         Ok(ErrorHandlerResponse::Response(res))
+            //     },
+            // ))
+            // .configure(controllers::routes::init_route)
+            // .service(Files::new("static/images", "static/images/").show_files_listing())
             .default_service(actix_web::web::route().to(actix_web::HttpResponse::MethodNotAllowed))
     });
 
