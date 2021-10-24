@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use redis::{Client};
 use redis::aio::MultiplexedConnection;
 use actix::prelude::*;
@@ -18,18 +19,13 @@ impl RedisActor {
 #[rtype(result = "Result<Option<String>, redis::RedisError>")]
 struct InfoCommand;
 
-
-
 impl Handler<InfoCommand> for RedisActor {
     type Result = ResponseFuture<Result<Option<String>, redis::RedisError>>;
 
     fn handle(&mut self, _msg: InfoCommand, _: &mut Self::Context) -> Self::Result {
-        let mut con = self.conn.clone();
-        let cmd = redis::cmd("INFO");
+        let mut con = self.conn.borrow_mut();
         let fut = async move {
-            cmd
-                .query_async(&mut con)
-                .await
+            redis::cmd("INFO").query_async(&mut con).await
         };
         Box::pin(fut)
     }
