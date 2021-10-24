@@ -16,7 +16,8 @@ go-faster=[]
 
 [dependencies]
 #framework
-#actix = "0.12.0"
+actix = "0.12"
+actix-rt = "1.1"
 actix-web = "3"
 #actix-files = "0.5"
 actix-cors = "0.5"
@@ -34,7 +35,7 @@ diesel_migrations = "1.4"
 #cache
 # mobc = "0.7"
 # mobc-redis = "0.7"
-# redis = { version = "0.21", features = ["tokio-comp"] }
+ redis = { version = "0.21", features = ["tokio-comp"] }
 
 #Serialize
 serde = "1.0"

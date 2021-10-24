@@ -9,9 +9,7 @@ extern crate validator_derive;
 #[macro_use]
 extern crate log;
 
-use actix_cors::Cors;
-use actix_web::middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers};
-use actix_web::web::JsonConfig;
+
 // #[macro_use]
 // extern crate diesel;
 
@@ -21,52 +19,26 @@ mod config;
 mod controllers;
 #[allow(dead_code)]
 mod middleware;
+#[allow(dead_code)]
+mod actors;
+#[allow(dead_code)]
+mod services;
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    // use actix::SyncArbiter;
-    // use actix::prelude::*;
+#[actix_rt::main]
+async fn main() {
     log_config();
     // let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::);
     // let exe = async {
-    //     let natActorAddr = actors::nats_actor::NatsActor.start();
+    //     let natActorAddr = actors::nats_listener_actor::NatsActor::new();
     // };
-    // actix_rt::Arbiter::spawn(async move {
-    //     actors::nats_actor::NatsActor.start();
-    // });
-    // natActorAddr.do_send(actors::nats_actor::NatsTask{});
-    // natActorAddr.do_send(actors::nats_actor::NatsTask{});
-    let mut server = actix_web::HttpServer::new(move || {
-        actix_web::App::new()
-            .wrap(actix_web::middleware::Compress::default())
-            // .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
-            .wrap(middleware::LoggingRequestMiddleware)
-            // Cors Config
-            .wrap(cors_config())
-            // .data(natActorAddr)
-            // Json Handler Config
-            .data(json_config())
-            // Default Error Handler
-            .wrap(ErrorHandlers::new().handler(
-                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-                |res| {
-                    error!("Default ErrorHandlers detected!");
-                    Ok(ErrorHandlerResponse::Response(res))
-                })
-            )
-            // Endpoint Config
-            .configure(controllers::routes::init_route)
-            // Default EndPoint
-            .default_service(actix_web::web::route().to(actix_web::HttpResponse::MethodNotAllowed))
-    });
+    // actix::Arbiter::spawn(async move {
+    //     actors::nats_listener_actor::NatsActor.start();
+    // }, ());
 
-    server = if let Some(l) = listenfd::ListenFd::from_env().take_tcp_listener(0)? {
-        server.listen(l)?
-    } else {
-        server.bind(&config::CONFIG.server)?
-    };
-    server.run().await
+    services::start_web_service().await;
+    services::start_registered_consumer().await;
 }
+
 
 fn log_config() {
     use std::io::Write;
@@ -110,25 +82,4 @@ fn log_config() {
                      module_style.value(module_short),
                      record.args())
         }).init();
-}
-
-fn json_config() -> JsonConfig {
-    actix_web::web::JsonConfig::default()
-        .limit(4096)
-        .error_handler(|err, _req| {
-            error!("Parse Json fail!: {:?}", err);
-            actix_web::error::InternalError::from_response(
-                err, actix_web::HttpResponse::BadRequest().finish()
-            ).into()
-        })
-}
-
-fn cors_config() -> Cors {
-    use actix_web::http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT};
-
-    Cors::default()
-            .send_wildcard()
-            .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE, ACCEPT])
-            .supports_credentials()
-            .max_age(3600)
 }
