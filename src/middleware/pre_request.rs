@@ -2,20 +2,23 @@ use std::cell::RefCell;
 use std::pin::Pin;
 use std::rc::Rc;
 use std::task::{Context, Poll};
-use actix_service::{Service, Transform};
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage};
+use actix_web::dev::{MessageBody, Service, Transform};
+use actix_web::http::Method;
+use actix_web::http::header;
 use futures::future::{ok, Future, Ready};
 use actix_web::web::BytesMut;
 use futures::StreamExt;
 
-pub struct PreRequest;
+pub struct LoggingRequestMiddleware;
 
-impl<S: 'static, B> Transform<S, ServiceRequest> for PreRequest
-where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
+impl<S: 'static, B> Transform<S> for LoggingRequestMiddleware
+    where
+        S: Service<Request=ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
+        S::Future: 'static,
+        B: 'static,
 {
+    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Transform = LoggingMiddleware<S>;
@@ -34,28 +37,36 @@ pub struct LoggingMiddleware<S> {
     service: Rc<RefCell<S>>,
 }
 
-impl<S, B> Service<ServiceRequest> for LoggingMiddleware<S>
-where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-    S::Future: 'static,
-    B: 'static,
+impl<S, B> Service for LoggingMiddleware<S>
+    where
+        S: Service<Request=ServiceRequest, Response=ServiceResponse<B>, Error=Error> + 'static,
+        S::Future: 'static,
+        B: 'static,
 {
+    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future = Pin<Box<dyn Future<Output=Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(&self, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
-    fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        info!("path:{:#?} {:#?}", req.method(), req.path());
-        info!("query:{:#?}", req.query_string());
-        info!("version:{:#?}", req.version());
-        for (key, value) in req.headers().into_iter() {
-            info!("{}:{:#?}", key, value);
+    fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
+        info!("");
+        info!("{:#?}: {:#?}", header::ACCEPT.as_str(), req.headers().get(header::ACCEPT).unwrap_or(&header::HeaderValue::from_str("").unwrap()));
+        info!("{:#?}: {:#?}", header::USER_AGENT.as_str(), req.headers().get(header::USER_AGENT).unwrap_or(&header::HeaderValue::from_str("").unwrap()));
+        info!("{:#?}: {:#?}", header::HOST.as_str(), req.headers().get(header::HOST).unwrap_or(&header::HeaderValue::from_str("").unwrap()));
+        if let Some(_) = req.headers().get(header::AUTHORIZATION) {
+            info!("{:#?}: \"****************************\"", header::AUTHORIZATION.as_str());
         }
-        let svc = self.service.clone();
+
+        info!("\"path\": {:#?} {:#?}", req.method(), req.path());
+        if !req.query_string().is_empty() {
+            info!("\"query\": {:#?}", req.query_string());
+        }
+
+        let mut svc = self.service.clone();
 
         Box::pin(async move {
             let mut body = BytesMut::new();
@@ -63,13 +74,17 @@ where
             while let Some(chunk) = stream.next().await {
                 body.extend_from_slice(&chunk?);
             }
-            let json: serde_json::Value = serde_json::from_slice(&*body).unwrap();
-            // let newBody: Stream  = serde_json::to_value(json).unwrap();
-            let request = ServiceRequest::from(req);
-            info!("body:{}", json);
+
+            if !body.size().is_eof()
+                && !(req.method() == Method::GET)
+                && !(req.method() == Method::HEAD) {
+                let json: serde_json::Value = serde_json::from_slice(&*body).unwrap();
+                // let request = ServiceRequest::from(req);
+                info!("\"body\": {}", json);
+            }
+
             // Wait for next process
-            let res = svc.call(request).await?;
-            Ok(res)
+            Ok(svc.call(req).await?)
         })
     }
 }

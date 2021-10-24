@@ -8,47 +8,25 @@ extern crate serde_json;
 extern crate validator_derive;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate diesel;
+
+use actix_cors::Cors;
+use actix_web::middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers};
+use actix_web::web::JsonConfig;
+// #[macro_use]
+// extern crate diesel;
 
 #[allow(dead_code)]
 mod config;
-// #[allow(dead_code)]
-// mod services;
-// #[allow(dead_code)]
-// mod controllers;
-// #[allow(dead_code)]
-// mod lib;
-// #[allow(dead_code)]
-// mod middleware;
-// #[allow(dead_code)]
-// mod model;
-// #[allow(dead_code)]
-// mod core;
-// #[allow(dead_code)]
-// mod actors;
-// #[allow(dead_code)]
-// mod utils;
-// #[allow(dead_code)]
-// mod repository;
+#[allow(dead_code)]
+mod controllers;
+#[allow(dead_code)]
+mod middleware;
 
-
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // use actix::SyncArbiter;
     // use actix::prelude::*;
-    // use actix_cors::Cors;
-    // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
-    // use actix_web::middleware::{ErrorHandlerResponse, ErrorHandlers};
-    // use actix_web::http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT};
-    // use actix_files::Files;
-    // setup_log();
-    // let mut builder =
-    //     SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-    // builder
-    //     .set_private_key_file("key.pem", SslFiletype::PEM)
-    //     .unwrap();
-    // builder.set_certificate_chain_file("cert.pem").unwrap();
+    log_config();
     // let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::);
     // let exe = async {
     //     let natActorAddr = actors::nats_actor::NatsActor.start();
@@ -60,59 +38,48 @@ async fn main() -> std::io::Result<()> {
     // natActorAddr.do_send(actors::nats_actor::NatsTask{});
     let mut server = actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            // .wrap(actix_web::middleware::Compress::default())
+            .wrap(actix_web::middleware::Compress::default())
             // .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
-            // .wrap(middleware::pre_request::PreRequest)
-            // .wrap(
-            //     Cors::default()
-            //         .send_wildcard()
-            //         .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE, ACCEPT])
-            //         .supports_credentials()
-            //         .max_age(3600)
-            // )
+            .wrap(middleware::LoggingRequestMiddleware)
+            // Cors Config
+            .wrap(cors_config())
             // .data(natActorAddr)
-            // .data(
-            //     actix_web::web::JsonConfig::default()
-            //         .limit(4096)
-            //         .error_handler(|err, _req| {
-            //             error!("Parse Json Fail!: {:?}", err);
-            //             actix_web::error::InternalError::from_response(
-            //                 err,
-            //                 actix_web::HttpResponse::BadRequest().finish(),
-            //             ).into()
-            //         }),
-            // )
-            // .wrap(ErrorHandlers::new().handler(
-            //     actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-            //     |res| {
-            //         error!("ErrorHandlers detect!");
-            //         Ok(ErrorHandlerResponse::Response(res))
-            //     },
-            // ))
-            // .configure(controllers::routes::init_route)
-            // .service(Files::new("static/images", "static/images/").show_files_listing())
+            // Json Handler Config
+            .data(json_config())
+            // Default Error Handler
+            .wrap(ErrorHandlers::new().handler(
+                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+                |res| {
+                    error!("Default ErrorHandlers detected!");
+                    Ok(ErrorHandlerResponse::Response(res))
+                })
+            )
+            // Endpoint Config
+            .configure(controllers::routes::init_route)
+            // Default EndPoint
             .default_service(actix_web::web::route().to(actix_web::HttpResponse::MethodNotAllowed))
     });
 
     server = if let Some(l) = listenfd::ListenFd::from_env().take_tcp_listener(0)? {
         server.listen(l)?
     } else {
-        // server.bind_openssl(&config::CONFIG.server, builder)?
         server.bind(&config::CONFIG.server)?
     };
     server.run().await
 }
 
-fn setup_log() {
+fn log_config() {
     use std::io::Write;
     use env_logger::fmt::Color;
-    use env_logger::fmt::Formatter;
     dotenv::dotenv().ok();
+
     std::env::set_var("RUST_LOG", "info, actix_web=info, actix_server=info");
     std::env::set_var("RUST_LOG_STYLE", "always");
     // std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
+
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
         .format(|buf, record| {
+            // Format Module
             let module_split = record.module_path().unwrap().split("::");
             let count = module_split.clone().count();
             let mut module_short = String::new();
@@ -126,9 +93,15 @@ fn setup_log() {
             }
             let mut module_style = buf.style();
             module_style.set_color(Color::Magenta);
+
+            // Format Local TimeStamp
             let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+
+            // Format Log Level
             let mut level_style = buf.default_level_style(record.level());
             level_style.set_bold(true).set_intense(true);
+
+            // Write Log Format
             writeln!(buf, "{} {} [{:?}-{}][{}]: {}",
                      timestamp,
                      level_style.value(record.level()),
@@ -137,4 +110,25 @@ fn setup_log() {
                      module_style.value(module_short),
                      record.args())
         }).init();
+}
+
+fn json_config() -> JsonConfig {
+    actix_web::web::JsonConfig::default()
+        .limit(4096)
+        .error_handler(|err, _req| {
+            error!("Parse Json fail!: {:?}", err);
+            actix_web::error::InternalError::from_response(
+                err, actix_web::HttpResponse::BadRequest().finish()
+            ).into()
+        })
+}
+
+fn cors_config() -> Cors {
+    use actix_web::http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT};
+
+    Cors::default()
+            .send_wildcard()
+            .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE, ACCEPT])
+            .supports_credentials()
+            .max_age(3600)
 }

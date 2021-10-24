@@ -1,2 +1,4 @@
-pub mod auth;
-pub mod pre_request;
+pub mod authenticate;
+mod pre_request;
+
+pub use pre_request::LoggingRequestMiddleware;
