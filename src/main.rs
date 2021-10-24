@@ -1,5 +1,5 @@
-#[macro_use]
-extern crate lazy_static;
+// #[macro_use]
+// extern crate lazy_static;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
@@ -20,11 +20,12 @@ mod controllers;
 #[allow(dead_code)]
 mod middleware;
 #[allow(dead_code)]
-mod actors;
-#[allow(dead_code)]
 mod services;
+#[allow(dead_code)]
+mod utils;
 
-#[actix_rt::main]
+
+#[actix_web::main]
 async fn main() {
     log_config();
     // let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::);

@@ -23,7 +23,7 @@ pub struct Config {
     //pub session_timeout: i64
 }
 
-lazy_static! {
+lazy_static::lazy_static! {
     pub static ref CONFIG: Config = get_config();
 }
 fn get_config() -> Config {
