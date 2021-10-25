@@ -46,8 +46,8 @@ pub async fn start_web_service() {
 fn json_config() -> web::JsonConfig {
     web::JsonConfig::default()
         .limit(4096)
-        .error_handler(|err, _req| {
-            error!("Parse Json fail!: {:?}", err);
+        .error_handler(|err, req| {
+            error!("Parse Json {:?} cause error: {:?}", req, err);
             error::InternalError::from_response(
                 err, HttpResponse::BadRequest().finish()
             ).into()

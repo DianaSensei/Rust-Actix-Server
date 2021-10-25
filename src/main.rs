@@ -1,17 +1,15 @@
-// #[macro_use]
-// extern crate lazy_static;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-#[macro_use]
-extern crate validator_derive;
+// #[macro_use]
+// extern crate serde_json;
+// #[macro_use]
+// extern crate validator_derive;
 #[macro_use]
 extern crate log;
-
-
 // #[macro_use]
 // extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
 #[allow(dead_code)]
 mod config;
@@ -23,21 +21,17 @@ mod middleware;
 mod services;
 #[allow(dead_code)]
 mod utils;
+#[allow(dead_code)]
+mod model;
 
 
 #[actix_web::main]
 async fn main() {
     log_config();
-    // let natActorAddr = SyncArbiter::start(1, actors::nats_actor::NatsActor::);
-    // let exe = async {
-    //     let natActorAddr = actors::nats_listener_actor::NatsActor::new();
-    // };
-    // actix::Arbiter::spawn(async move {
-    //     actors::nats_listener_actor::NatsActor.start();
-    // }, ());
 
-    services::start_web_service().await;
+    services::client::postgres_client_service::init_and_run_migration();
     services::start_registered_consumer().await;
+    services::start_web_service().await;
 }
 
 

@@ -31,11 +31,8 @@ nats = "0.15"
 diesel = { version = "1.4", features = ["chrono", "postgres", "r2d2", "uuidv07", "numeric"] }
 diesel_migrations = "1.4"
 # postgres = "0.19"
-# r2d2 = "0.8.9"
-# eventstore = "1.0.0"
+r2d2 = "0.8"
 #cache
-# mobc = "0.7"
-# mobc-redis = "0.7"
 redis = { version = "0.21", features = ["tokio-comp", "connection-manager"] }
 
 #Serialize
@@ -55,8 +52,7 @@ tokio =  { version = "1.12", features = ["full"]}
 #pin-project = "1.0.7"
 
 #mailer
-# lettre = "0.9"
-# lettre_email = "0.9"
+lettre = "0.10.0-rc.3"
 
 #validator
 validator = {version = "0.14", features = ["phone"]}
@@ -67,7 +63,6 @@ once_cell = "1.5"
 # url = "2.1"
 listenfd = "0.3"
 #reqwest = "0.11"
-#native-tls = "0.2.4"
 envy = "0.4"
 log = "0.4"
 dotenv = "0.15"

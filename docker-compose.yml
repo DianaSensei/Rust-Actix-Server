@@ -1,48 +1,50 @@
-version: "3.7"
+version: "3.8"
 
 services:
-# web:
-#   build: ./web
-#   volumes:
-#     - ./web:/usr/src/app
-#   ports:
-#     - "3000:3000"
-#   command: bash -c "yarn && yarn start"
-#   links:
-#     - api_server
+  #  server:
+  #    build:
+  #      context: .
+  #      dockerfile: Dockerfile
+  #    ports:
+  #      - "3000:3000"
+  #    # expose: ["3000"]
+  #    volumes:
+  #      - .:/usr/src/app
+  #      - registry:/root/.cargo/registry
+  #    depends_on:
+  #      # - redis
+  #      - nats
+  #       - postgres
+  #    # links:
+  #    #   - postgres
+  #    env_file: .env
+  #    command: bash -c "bash cargo-watch -x run"
 
-#  server:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    ports:
-#      - "3000:3000"
-#    # expose: ["3000"]
-#    volumes:
-#      - .:/usr/src/app
-#      - registry:/root/.cargo/registry
-#    depends_on:
-#      # - redis
-#      - mongo_db
-#    # links:
-#    #   - mongo_db
-#    env_file: .env
-#    command: bash -c "bash cargo-watch -x run"
+  nats:
+    image: nats:latest
+    # entrypoint: "/gnatsd -DV"
 
- redis:
-     image: redis:latest
-     ports:
-       - "6379:6379"
-     expose:
-       - "6379"
-     volumes:
-       - .docker/redis:/data
-     restart: unless-stopped
-     deploy:
-       replicas: 1
-     # configs:
-     #   - my_config
-     #   - my_other_config
+    restart: unless-stopped
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+      - "6222:6222"
+  #       hostname: nats
+  #       networks:
+  #           - nats
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - .docker/redis:/data
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+    # configs:
+    #   - my_config
+    #   - my_other_config
 
   postgres:
     container_name: postgres
@@ -51,10 +53,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - PGDATA=/data/postgres
-    logging:
-      options:
-        max-size: 10m
-        max-file: "3"
     volumes:
       - .docker/postgres:/data/postgres
     ports:
