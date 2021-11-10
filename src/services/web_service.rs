@@ -1,17 +1,13 @@
+use crate::config;
+use crate::controllers;
+use crate::middleware;
 use actix_cors::Cors;
 use actix_web::{
+    error, http,
     middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers},
     middleware::Compress,
-    http,
-    web,
-    error,
-    HttpServer,
-    HttpResponse,
-    App
+    web, App, HttpResponse, HttpServer,
 };
-use crate::middleware;
-use crate::controllers;
-use crate::config;
 
 pub async fn start_web_service() {
     let _ = HttpServer::new(move || {
@@ -25,22 +21,21 @@ pub async fn start_web_service() {
             // Json Handler Config
             .data(json_config())
             // Default Error Handler
-            .wrap(ErrorHandlers::new().handler(
-                http::StatusCode::INTERNAL_SERVER_ERROR,
-                |res| {
+            .wrap(
+                ErrorHandlers::new().handler(http::StatusCode::INTERNAL_SERVER_ERROR, |res| {
                     error!("Default ErrorHandlers detected!");
                     Ok(ErrorHandlerResponse::Response(res))
-                })
+                }),
             )
             // Endpoint Config
             .configure(controllers::routes::init_route)
             // Default EndPoint
             .default_service(web::route().to(HttpResponse::MethodNotAllowed))
     })
-        .bind(&config::CONFIG.server)
-        .unwrap()
-        .run()
-        .await;
+    .bind(&config::CONFIG.server)
+    .unwrap()
+    .run()
+    .await;
 }
 
 fn json_config() -> web::JsonConfig {
@@ -48,14 +43,12 @@ fn json_config() -> web::JsonConfig {
         .limit(4096)
         .error_handler(|err, req| {
             error!("Parse Json {:?} cause error: {:?}", req, err);
-            error::InternalError::from_response(
-                err, HttpResponse::BadRequest().finish()
-            ).into()
+            error::InternalError::from_response(err, HttpResponse::BadRequest().finish()).into()
         })
 }
 
 fn cors_config() -> Cors {
-    use http::header::{AUTHORIZATION, CONTENT_TYPE, ACCEPT};
+    use http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 
     Cors::default()
         .send_wildcard()

@@ -1,15 +1,15 @@
 #[macro_use]
 extern crate serde_derive;
-// #[macro_use]
-// extern crate serde_json;
-// #[macro_use]
-// extern crate validator_derive;
+#[macro_use]
+extern crate validator_derive;
 #[macro_use]
 extern crate log;
-// #[macro_use]
-// extern crate diesel;
+#[macro_use]
+extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
+#[macro_use]
+extern crate strum;
 
 #[allow(dead_code)]
 mod config;
@@ -18,12 +18,11 @@ mod controllers;
 #[allow(dead_code)]
 mod middleware;
 #[allow(dead_code)]
+mod model;
+#[allow(dead_code)]
 mod services;
 #[allow(dead_code)]
 mod utils;
-#[allow(dead_code)]
-mod model;
-
 
 #[actix_web::main]
 async fn main() {
@@ -34,10 +33,9 @@ async fn main() {
     services::start_web_service().await;
 }
 
-
 fn log_config() {
-    use std::io::Write;
     use env_logger::fmt::Color;
+    use std::io::Write;
     dotenv::dotenv().ok();
 
     std::env::set_var("RUST_LOG", "info, actix_web=info, actix_server=info");
@@ -69,12 +67,16 @@ fn log_config() {
             level_style.set_bold(true).set_intense(true);
 
             // Write Log Format
-            writeln!(buf, "{} {} [{:?}-{}][{}]: {}",
-                     timestamp,
-                     level_style.value(record.level()),
-                     std::thread::current().id(),
-                     std::process::id(),
-                     module_style.value(module_short),
-                     record.args())
-        }).init();
+            writeln!(
+                buf,
+                "{} {} [{:?}-{}][{}]: {}",
+                timestamp,
+                level_style.value(record.level()),
+                std::thread::current().id(),
+                std::process::id(),
+                module_style.value(module_short),
+                record.args()
+            )
+        })
+        .init();
 }

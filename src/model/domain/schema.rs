@@ -1,21 +1,23 @@
-// use diesel::sql_types::*;
-// use super::language::Language;
-
 
 table! {
+    use crate::model::domain::language::LanguageType;
+    use diesel::sql_types::*;
+
     users (id) {
-        id -> Integer,
+        id -> Text,
         email -> Text,
-        password -> Text,
+        user_name -> Nullable<Text>,
+        hashed_password -> Text,
         first_name -> Nullable<Text>,
         last_name -> Nullable<Text>,
         phone_number -> Nullable<Text>,
+        status -> Text,
         role -> Text,
-        // language -> Language,
+        language -> LanguageType,
         created_by -> Text,
-        created_time_dt -> Timestamp,
+        created_time_utc -> Timestamp,
         updated_by -> Text,
-        updated_time_dt -> Timestamp,
+        updated_time_utc -> Timestamp,
     }
 }
 //

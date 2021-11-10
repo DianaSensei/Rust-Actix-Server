@@ -1,22 +1,22 @@
+use actix_web::dev::{MessageBody, Service, Transform};
+use actix_web::http::header;
+use actix_web::http::Method;
+use actix_web::web::BytesMut;
+use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage};
+use futures::future::{ok, Future, Ready};
+use futures::StreamExt;
 use std::cell::RefCell;
 use std::pin::Pin;
 use std::rc::Rc;
 use std::task::{Context, Poll};
-use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage};
-use actix_web::dev::{MessageBody, Service, Transform};
-use actix_web::http::Method;
-use actix_web::http::header;
-use futures::future::{ok, Future, Ready};
-use actix_web::web::BytesMut;
-use futures::StreamExt;
 
 pub struct LoggingRequestMiddleware;
 
 impl<S: 'static, B> Transform<S> for LoggingRequestMiddleware
-    where
-        S: Service<Request=ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
-        S::Future: 'static,
-        B: 'static,
+where
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
@@ -38,15 +38,15 @@ pub struct LoggingMiddleware<S> {
 }
 
 impl<S, B> Service for LoggingMiddleware<S>
-    where
-        S: Service<Request=ServiceRequest, Response=ServiceResponse<B>, Error=Error> + 'static,
-        S::Future: 'static,
-        B: 'static,
+where
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    S::Future: 'static,
+    B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = Pin<Box<dyn Future<Output=Result<Self::Response, Self::Error>>>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
@@ -54,11 +54,32 @@ impl<S, B> Service for LoggingMiddleware<S>
 
     fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
         info!("");
-        info!("{:#?}: {:#?}", header::ACCEPT.as_str(), req.headers().get(header::ACCEPT).unwrap_or(&header::HeaderValue::from_str("").unwrap()));
-        info!("{:#?}: {:#?}", header::USER_AGENT.as_str(), req.headers().get(header::USER_AGENT).unwrap_or(&header::HeaderValue::from_str("").unwrap()));
-        info!("{:#?}: {:#?}", header::HOST.as_str(), req.headers().get(header::HOST).unwrap_or(&header::HeaderValue::from_str("").unwrap()));
+        info!(
+            "{:#?}: {:#?}",
+            header::ACCEPT.as_str(),
+            req.headers()
+                .get(header::ACCEPT)
+                .unwrap_or(&header::HeaderValue::from_str("").unwrap())
+        );
+        info!(
+            "{:#?}: {:#?}",
+            header::USER_AGENT.as_str(),
+            req.headers()
+                .get(header::USER_AGENT)
+                .unwrap_or(&header::HeaderValue::from_str("").unwrap())
+        );
+        info!(
+            "{:#?}: {:#?}",
+            header::HOST.as_str(),
+            req.headers()
+                .get(header::HOST)
+                .unwrap_or(&header::HeaderValue::from_str("").unwrap())
+        );
         if let Some(_) = req.headers().get(header::AUTHORIZATION) {
-            info!("{:#?}: \"****************************\"", header::AUTHORIZATION.as_str());
+            info!(
+                "{:#?}: \"****************************\"",
+                header::AUTHORIZATION.as_str()
+            );
         }
 
         info!("\"path\": {:#?} {:#?}", req.method(), req.path());
@@ -77,7 +98,8 @@ impl<S, B> Service for LoggingMiddleware<S>
 
             if !body.size().is_eof()
                 && !(req.method() == Method::GET)
-                && !(req.method() == Method::HEAD) {
+                && !(req.method() == Method::HEAD)
+            {
                 let json: serde_json::Value = serde_json::from_slice(&*body).unwrap();
                 // let request = ServiceRequest::from(req);
                 info!("\"body\": {}", json);

@@ -37,16 +37,13 @@ status! {
     (900, UNKNOWN, "Unknown");
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Status(i16);
 
 impl Status {
-
     #[inline]
     pub fn from_i16(src: i16) -> Result<Status, ()> {
-        Some(src)
-            .map(Status)
-            .ok_or(())
+        Some(src).map(Status).ok_or(())
     }
 
     #[inline]
@@ -120,4 +117,3 @@ impl TryFrom<i16> for Status {
         Status::from_i16(t)
     }
 }
-

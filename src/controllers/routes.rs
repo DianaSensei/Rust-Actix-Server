@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse, guard};
+use actix_web::{guard, web, HttpResponse};
 
 pub fn init_route(cfg: &mut web::ServiceConfig) {
     cfg.service(

@@ -27,7 +27,7 @@ actix-web-grants = "2.2"
 #message broker
 nats = "0.15"
 
-#stored, persistent
+#stored, domain
 diesel = { version = "1.4", features = ["chrono", "postgres", "r2d2", "uuidv07", "numeric"] }
 diesel_migrations = "1.4"
 # postgres = "0.19"
@@ -39,6 +39,8 @@ redis = { version = "0.21", features = ["tokio-comp", "connection-manager"] }
 serde = "1.0"
 serde_derive = "1.0"
 serde_json ="1.0"
+strum = { version = "0.22", features = ["derive"] }
+derive_more = "0.99"
 #capnp = "0.14.1"
 #capnpc = "0.14.3"
 #capnp-futures = "0.14.1"
@@ -67,7 +69,7 @@ envy = "0.4"
 log = "0.4"
 dotenv = "0.15"
 env_logger = "0.9"
-derive_more = "0.99"
+
 #rand = "0.8"
 lazy_static ="1.4"
 uuid = { version = "0.8.1", features = ["serde", "v4"]}
@@ -77,4 +79,4 @@ libreauth = "0.14"
 #elastic_derive = "0.21.0-pre.5"
 #jwt = "*"
 #meilies-client  = "*"
-chrono = "*"
+chrono = { version = "0.4", features = ["serde"]}
