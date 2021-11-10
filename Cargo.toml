@@ -5,14 +5,15 @@ authors = ["thong.nguyen <thong.nguyen@mservice.com.vn>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-# [profile.release]
-# lto = true #thin/off/false
-# opt-level = 2
+[profile.release]
+lto = true #thin/off/false
+opt-level = 2
+
 [profile.dev]
 split-debuginfo = "unpacked"
 
 [features]
-go-faster=[]
+go-faster = []
 
 [dependencies]
 #framework
@@ -27,10 +28,10 @@ actix-web-grants = "2.2"
 #message broker
 nats = "0.15"
 
-#stored, domain
+#Orm
 diesel = { version = "1.4", features = ["chrono", "postgres", "r2d2", "uuidv07", "numeric"] }
 diesel_migrations = "1.4"
-# postgres = "0.19"
+#Connection pool manager
 r2d2 = "0.8"
 #cache
 redis = { version = "0.21", features = ["tokio-comp", "connection-manager"] }
@@ -38,8 +39,10 @@ redis = { version = "0.21", features = ["tokio-comp", "connection-manager"] }
 #Serialize
 serde = "1.0"
 serde_derive = "1.0"
-serde_json ="1.0"
+serde_json = "1.0"
+#Enumerate macro
 strum = { version = "0.22", features = ["derive"] }
+#Derive macro advance
 derive_more = "0.99"
 #capnp = "0.14.1"
 #capnpc = "0.14.3"
@@ -47,36 +50,40 @@ derive_more = "0.99"
 #capnp-rpc = "0.14.1"
 # json = "0.12"
 
-#thread, async
+#Thread, async, runtime
 futures = "0.3"
-tokio =  { version = "1.12", features = ["full"]}
-#failure = "0.1.8"
+tokio = { version = "1.12", features = ["full"] }
+#Error customizer
+thiserror = "1.0"
 #pin-project = "1.0.7"
 
 #mailer
 lettre = "0.10.0-rc.3"
 
 #validator
-validator = {version = "0.14", features = ["phone"]}
+validator = { version = "0.14", features = ["phone"] }
 validator_derive = { version = "0.14", features = ["phone"] }
 
-#util
+#Global variable
 once_cell = "1.5"
 # url = "2.1"
-listenfd = "0.3"
 #reqwest = "0.11"
+#Configuration Mapper
 envy = "0.4"
+#Logger customizer
 log = "0.4"
 dotenv = "0.15"
 env_logger = "0.9"
 
 #rand = "0.8"
-lazy_static ="1.4"
-uuid = { version = "0.8.1", features = ["serde", "v4"]}
+#Static sync variable
+lazy_static = "1.4"
+#Uuid generator
+uuid = { version = "0.8.1", features = ["serde", "v4"] }
+#Hasher
 libreauth = "0.14"
 
-#elastic = "0.21.0-pre.5"
-#elastic_derive = "0.21.0-pre.5"
 #jwt = "*"
-#meilies-client  = "*"
-chrono = { version = "0.4", features = ["serde"]}
+
+#Time library
+chrono = { version = "0.4", features = ["serde"] }
