@@ -71,11 +71,10 @@ fn log_config() {
             // Write Log Format
             writeln!(
                 buf,
-                "{} {} [{:?}-{}][{}]: {}",
+                "{} {} [{:?}][{}]: {}",
                 timestamp,
                 level_style.value(record.level()),
                 std::thread::current().id(),
-                std::process::id(),
                 module_style.value(module_short),
                 record.args()
             )
