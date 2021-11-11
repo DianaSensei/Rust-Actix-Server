@@ -28,7 +28,7 @@ pub async fn start_web_service() {
                 }),
             )
             // Endpoint Config
-            .configure(controllers::routes::init_route)
+            .configure(controllers::router::global_router)
             // Default EndPoint
             .default_service(web::route().to(HttpResponse::MethodNotAllowed))
     })

@@ -1,4 +1,4 @@
 pub mod authenticate;
-mod pre_request;
+mod request_logger;
 
-pub use pre_request::LoggingRequestMiddleware;
+pub use request_logger::LoggingRequestMiddleware;

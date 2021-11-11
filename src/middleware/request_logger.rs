@@ -53,7 +53,7 @@ where
     }
 
     fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
-        info!("");
+        info!(" --------");
         info!(
             "{:#?}: {:#?}",
             header::ACCEPT.as_str(),
