@@ -30,7 +30,7 @@ pub async fn start_web_service() {
             // Endpoint Config
             .configure(controllers::router::global_router)
             // Default EndPoint
-            .default_service(web::route().to(HttpResponse::MethodNotAllowed))
+            .default_service(web::route().to(HttpResponse::NotFound))
     })
     .bind(&config::CONFIG.server)
     .unwrap()

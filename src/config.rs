@@ -1,11 +1,15 @@
-use serde::Deserialize;
+use once_cell::sync::Lazy;
+use crate::utils::hasher::default_hasher_scheme_version;
 
 #[derive(Clone, Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
 pub struct Config {
     //pub auth_salt: String,
     pub database_url: String,
     pub redis_url: String,
     pub nats_url: String,
+    pub kafka_broker_url: String,
+    pub kafka_message_timeout: String,
     //pub jwt_expiration: i64,
     //pub jwt_key: String,
     //pub rust_backtrace:u8,
@@ -18,15 +22,21 @@ pub struct Config {
     pub smtp_port: i64,
     pub domain: String,
     pub dev_mode: bool,
+    #[serde(default="default_hasher_scheme_version")]
+    pub scheme_hasher_version: usize
     //pub session_key: String,
     //pub session_name:String,
     //pub session_secure: bool,
     //pub session_timeout: i64
 }
 
-lazy_static::lazy_static! {
-    pub static ref CONFIG: Config = get_config();
-}
+// lazy_static::lazy_static! {
+//     pub static ref CONFIG: Config = get_config();
+// }
+
+pub static CONFIG: Lazy<Config> = Lazy::new(get_config);
+
+
 fn get_config() -> Config {
     dotenv::dotenv().ok();
 

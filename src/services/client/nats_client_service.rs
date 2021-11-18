@@ -17,6 +17,7 @@ pub async fn get_nats_connection() -> Option<&'static Connection> {
     if !*initialized {
         if let Ok(conn) = connect(config::CONFIG.nats_url.as_str()) {
             if let Ok(_) = NATS_CONNECTION.set(conn) {
+                info!("NATS CLIENT INITIATE: [SUCCESS]");
                 *initialized = true;
             }
         }

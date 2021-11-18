@@ -30,8 +30,20 @@ mod utils;
 async fn main() {
     log_config();
 
+    // Create client connections
+    services::client::get_kafka_connection().await;
+    services::client::get_nats_connection().await;
+    services::client::get_redis_connection().await;
+    services::client::get_smtp_connection().await;
+
+    utils::hasher::get_argon2_hasher();
+    // Create Database connection and run migration
     services::client::postgres_client_service::init_and_run_migration();
+
+    // Start Consumers
     services::start_registered_consumer().await;
+
+    // Start Web server
     services::start_web_service().await;
 }
 

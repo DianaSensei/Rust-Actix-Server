@@ -27,6 +27,7 @@ pub async fn get_smtp_connection() -> Option<&'static SmtpTransport> {
                 .credentials(Credentials::new(smtp_username, smtp_password))
                 .build();
             if let Ok(_) = SMTP_CONNECTION.set(conn) {
+                info!("SMTP CLIENT INITIATE: [SUCCESS]");
                 *initialized = true;
             }
         }

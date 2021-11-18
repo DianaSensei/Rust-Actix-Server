@@ -17,6 +17,7 @@ pub async fn get_redis_connection() -> Option<&'static ConnectionManager> {
         if let Ok(client) = redis::Client::open(config::CONFIG.redis_url.as_str()) {
             if let Ok(conn) = client.get_tokio_connection_manager().await {
                 if let Ok(_) = REDIS_CLIENT.set(conn) {
+                    info!("REDIS CLIENT INITIATE: [SUCCESS]");
                     *initialized = true;
                 }
             }

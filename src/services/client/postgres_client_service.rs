@@ -1,18 +1,19 @@
 use crate::config;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
+use once_cell::sync::Lazy;
 
 embed_migrations!();
 
 type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
-lazy_static::lazy_static! {
-    static ref DB_CONNECTION_POOL: Pool = {
-        let manager = ConnectionManager::<PgConnection>::new(&*config::CONFIG.database_url);
-        Pool::builder().build(manager).expect("Failed to create database connection pool")
-    };
-}
+static DB_CONNECTION_POOL: Lazy<Pool> = Lazy::new(|| {
+    let manager = ConnectionManager::<PgConnection>::new(&*config::CONFIG.database_url);
+    let pool = Pool::builder().build(manager).expect("Failed to create database connection pool");
+    info!("POSTGRES CLIENT INITIATE: [SUCCESS]");
+    pool
+});
 
 pub fn init_and_run_migration() {
     let conn = get_database_connection().expect("Failed to get database connection pool");
