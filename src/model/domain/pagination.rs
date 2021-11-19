@@ -3,6 +3,7 @@ use diesel::prelude::*;
 use diesel::query_builder::*;
 use diesel::query_dsl::methods::LoadQuery;
 use diesel::sql_types::BigInt;
+use crate::model::domain::pagination_result::PaginationResult;
 
 pub trait Paginate: Sized {
     fn paginate(self, page: i64) -> Paginated<Self>;
@@ -32,16 +33,26 @@ impl<T> Paginated<T> {
         Paginated { per_page, ..self }
     }
 
-    pub fn load_and_count_pages<U>(self, conn: &mut PgConnection) -> QueryResult<(Vec<U>, i64)>
-                                   where
-                                       Self: LoadQuery<PgConnection, (U, i64)>,
+    /// Return records, pagination info
+    pub fn load_and_count_pages<U>(self, conn: &mut PgConnection) -> QueryResult<(Vec<U>, PaginationResult)>
+                                   where Self: LoadQuery<PgConnection, (U, i64)>
     {
         let per_page = self.per_page;
+        let page = self.page;
         let results = self.load::<(U, i64)>(conn)?;
         let total = results.get(0).map(|x| x.1).unwrap_or(0);
-        let records = results.into_iter().map(|x| x.0).collect();
+        let records: Vec<U> = results.into_iter().map(|x| x.0).collect();
         let total_pages = (total as f64 / per_page as f64).ceil() as i64;
-        Ok((records, total_pages))
+
+        let pagination_result = PaginationResult {
+            number_of_elements: records.len(),
+            page,
+            page_size: per_page,
+            total_pages,
+            total_elements: total as usize
+        };
+
+        Ok((records, pagination_result))
     }
 }
 
@@ -61,7 +72,7 @@ impl<T> QueryFragment<Pg> for Paginated<T>
         out.push_sql(") t LIMIT ");
         out.push_bind_param::<BigInt, _>(&self.per_page)?;
         out.push_sql(" OFFSET ");
-        let offset = (self.page - 1) * self.per_page;
+        let offset = self.page * self.per_page;
         out.push_bind_param::<BigInt, _>(&offset)?;
         Ok(())
     }

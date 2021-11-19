@@ -25,6 +25,8 @@ mod model;
 mod services;
 #[allow(dead_code)]
 mod utils;
+#[allow(dead_code)]
+mod repository;
 
 #[actix_web::main]
 async fn main() {

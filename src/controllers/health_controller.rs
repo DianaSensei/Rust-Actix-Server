@@ -11,7 +11,7 @@ pub fn router(cfg: &mut web::ServiceConfig) {
 
 async fn get_health() -> HttpResponse {
     HttpResponse::Ok().json(HealthResponse {
-        status: "Ok2".to_owned(),
+        status: "Ok".to_owned(),
         version: "Cargo Version: ".to_string() + env!("CARGO_PKG_VERSION").into(),
     })
 }

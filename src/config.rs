@@ -22,20 +22,17 @@ pub struct Config {
     pub smtp_port: i64,
     pub domain: String,
     pub dev_mode: bool,
+
     #[serde(default="default_hasher_scheme_version")]
     pub scheme_hasher_version: usize
+
     //pub session_key: String,
     //pub session_name:String,
     //pub session_secure: bool,
     //pub session_timeout: i64
 }
 
-// lazy_static::lazy_static! {
-//     pub static ref CONFIG: Config = get_config();
-// }
-
 pub static CONFIG: Lazy<Config> = Lazy::new(get_config);
-
 
 fn get_config() -> Config {
     dotenv::dotenv().ok();
