@@ -1,0 +1,56 @@
+name: CI Dev(Linux)
+
+on:
+  push:
+    branches: 
+      - '*'         # matches every branch that doesn't contain a '/'
+      - '*/*'       # matches every branch containing a single '/'
+      - '**'        # matches every branch
+      - '!master'   # excludes master
+  pull_request:
+    branches:
+      - '*'         # matches every branch that doesn't contain a '/'
+      - '*/*'       # matches every branch containing a single '/'
+      - '**'        # matches every branch
+      - '!master'   # excludes master
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+        
+      - name: Prepare Systemt Library
+        run: sudo apt-get update && sudo apt-get install libsasl2-dev
+
+      - name: Run cargo check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+                    
+  build_test:
+    needs: [check]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v2
+    
+    - name: Prepare Systemt Library
+      run: sudo apt-get update && sudo apt-get install libsasl2-dev
+      
+    - name: Build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --verbose
+      
+    - name: Run tests
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --verbose
