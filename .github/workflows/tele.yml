@@ -1,7 +1,7 @@
 name: TelegramNotify
 jobs:
 
-  build:
+  Notify_change:
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -12,7 +12,7 @@ jobs:
         to: ${{ secrets.TELEGRAM_CHAT_ID }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
         message: |
-          [${{ github.REPOSITORY }}][${{ github.EVENT_NAME }}][${{job.status}}] - SHA:${{ github.SHA }} by ${{github.ACTOR}}.
+          [${{ github.REPOSITORY }}][${{ github.EVENT_NAME }}][${{ github.REF_NAME }}][${{job.status}}] - COMMIT:[${{ github.event.head_commit.message }}] - SHA:${{ github.SHA }} by ${{github.ACTOR}}.
 
 on:
   push:

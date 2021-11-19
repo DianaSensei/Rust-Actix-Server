@@ -10,15 +10,70 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  check:
+    name: Check
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
+      - name: Checkout sources
+        uses: actions/checkout@v2
+        
+      - name: Prepare Systemt Library
+        run: sudo apt-get update && sudo apt-get install libsasl2-dev
+
+      - name: Run cargo check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          
+      - name: Notify failure
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            [${{ github.REPOSITORY }}][CI PIPELINE][${{ github.REF_NAME }}][CHECK STEP][FAIL] - COMMIT:[${{ github.event.head_commit.message }}] - SHA:${{ github.SHA }} by ${{github.ACTOR}}.
+          
+  build_test:
+    needs: [check]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v2
+    
     - name: Prepare Systemt Library
-      run: apt-get update && apt-get install libsasl2-dev
+      run: sudo apt-get update && sudo apt-get install libsasl2-dev
+      
     - name: Build
-      run: cargo build --verbose
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --verbose
+      
     - name: Run tests
-      run: cargo test --verbose
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --verbose
+          
+    - name: Notify failure
+      if: failure()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          [${{ github.REPOSITORY }}][CI PIPELINE][${{ github.REF_NAME }}][BUILD STEP][FAIL] - COMMIT:[${{ github.event.head_commit.message }}] - SHA:${{ github.SHA }} by ${{github.ACTOR}}.
+          
+          
+  notify_success:
+    needs: [build_test]
+    runs-on: ubuntu-latest
+    steps:
+    - name: send custom message with args
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          [${{ github.REPOSITORY }}][CI PIPELINE][${{ github.REF_NAME }}][PASS] - COMMIT:[${{ github.event.head_commit.message }}] - SHA:${{ github.SHA }} by ${{github.ACTOR}}.
