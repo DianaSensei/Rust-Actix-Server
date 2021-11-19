@@ -25,12 +25,14 @@ actix-cors = "0.5"
 actix-web-httpauth = "0.5"
 actix-web-grants = "2.2"
 
+#ssl
+openssl = { version = "0.10", features = ["v110"] }
+
 #Message broker
 #nats client
 nats = "0.15"
 #kafka client
 rdkafka = { version = "0.25", features = ["ssl", "sasl"] }
-
 
 #Orm
 diesel = { version = "1.4", features = ["chrono", "postgres", "r2d2", "uuidv07", "numeric"] }

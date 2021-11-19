@@ -52,7 +52,7 @@ fn log_config() {
     use std::io::Write;
     dotenv::dotenv().ok();
 
-    std::env::set_var("RUST_LOG", "info, actix_web=info, actix_server=info");
+    std::env::set_var("RUST_LOG", "info, actix_web=info,actix_server=info,actix_http=trace");
     std::env::set_var("RUST_LOG_STYLE", "always");
     // std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
 
