@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Prepare Systemt Library
+      run: apt-get update && apt-get install libsasl2-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
