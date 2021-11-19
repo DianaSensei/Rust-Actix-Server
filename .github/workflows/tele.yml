@@ -1,4 +1,4 @@
-name: TelegramNotify
+name: Notify Change Master
 jobs:
 
   Notify_change:
@@ -16,7 +16,9 @@ jobs:
 
 on:
   push:
+    branches: [master]
   pull_request:
+    branches: [master]
     types: [opened,closed]
   issues:
     types: [opened, closed, reopened]
