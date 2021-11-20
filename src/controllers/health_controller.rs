@@ -1,12 +1,9 @@
 use crate::model::response::health_response::HealthResponse;
-use actix_web::{guard, web, HttpResponse};
+use actix_web::{web, HttpResponse, Scope};
 
-pub fn router(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("/api/v1")
-            .guard(guard::Header("content-type", "application/json"))
-            .service(web::resource("health").to(get_health)),
-    );
+pub fn router() -> Scope {
+    web::scope("/api/v1/health")
+        .service(web::resource("health").to(get_health))
 }
 
 async fn get_health() -> HttpResponse {
