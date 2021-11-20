@@ -1,6 +1,6 @@
-mod constant;
+pub mod constant;
 pub mod domain;
-mod enumerate;
-pub mod response;
+pub mod enumerate;
 pub mod nats;
 pub mod request;
+pub mod response;

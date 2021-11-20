@@ -1,13 +1,15 @@
 use super::schema::users;
+use crate::model::domain::language::Language;
 use crate::model::enumerate::user_status::UserStatus;
 use chrono::NaiveDateTime;
-use crate::model::domain::language::Language;
+use std::fmt;
+use std::fmt::Formatter;
 
 #[derive(Serialize, Deserialize, Queryable, Identifiable, Debug, Clone)]
 #[table_name = "users"]
 // #[belongs_to(User)]
 pub struct User {
-    pub id: String,
+    pub id: i32,
     pub email: String,
     pub user_name: Option<String>,
     pub hashed_password: String,
@@ -21,6 +23,14 @@ pub struct User {
     pub created_time_utc: NaiveDateTime,
     pub updated_by: String,
     pub updated_time_utc: NaiveDateTime,
+}
+
+impl fmt::Display for User {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut processed_data = self.clone();
+        processed_data.hashed_password = String::from("********");
+        write!(f, "{}", serde_json::to_string(&processed_data).unwrap())
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Validate)]

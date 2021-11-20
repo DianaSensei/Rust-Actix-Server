@@ -1,15 +1,16 @@
+use crate::config;
 use libreauth::pass::{Algorithm, HashBuilder, Hasher};
 use once_cell::sync::Lazy;
-use crate::config;
 
 const PWD_ALGORITHM: Algorithm = Algorithm::Argon2;
-static PWD_SCHEME_VERSION: Lazy<usize> = Lazy::new(|| {
-    config::CONFIG.scheme_hasher_version
-});
+static PWD_SCHEME_VERSION: Lazy<usize> = Lazy::new(|| config::CONFIG.scheme_hasher_version);
 
 // If the Hasher changes, make sure to increment PWD_SCHEME_VERSION
 static HASHER: Lazy<Hasher> = Lazy::new(|| {
-    info!("HASHER ARGON 2 INITIATE: - version {} [SUCCESS]", *PWD_SCHEME_VERSION);
+    info!(
+        "HASHER ARGON 2 INITIATE: - version {} [SUCCESS]",
+        *PWD_SCHEME_VERSION
+    );
 
     HashBuilder::new()
         .algorithm(PWD_ALGORITHM)
@@ -21,7 +22,6 @@ static HASHER: Lazy<Hasher> = Lazy::new(|| {
 pub fn default_hasher_scheme_version() -> usize {
     1
 }
-
 
 pub fn get_argon2_hasher() -> &'static Hasher {
     &HASHER

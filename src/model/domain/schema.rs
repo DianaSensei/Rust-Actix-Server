@@ -1,10 +1,9 @@
-
 table! {
     use crate::model::domain::language::LanguageType;
     use diesel::sql_types::*;
 
     users (id) {
-        id -> Text,
+        id -> Integer,
         email -> Text,
         user_name -> Nullable<Text>,
         hashed_password -> Text,

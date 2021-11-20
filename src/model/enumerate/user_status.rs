@@ -1,9 +1,9 @@
 use diesel::deserialize::FromSql;
 use diesel::pg::Pg;
-use diesel::sql_types::Text;
 use diesel::serialize::{IsNull, Output, ToSql};
+use diesel::sql_types::Text;
 use diesel::{deserialize, serialize};
-use std::fmt::{Debug};
+use std::fmt::Debug;
 use std::io::Write;
 use std::str::FromStr;
 
@@ -39,9 +39,8 @@ impl FromSql<UserStatus, Pg> for UserStatus {
             None => Err("Unrecognized enumerate variant".into()),
             Some(_bytes) => match std::str::from_utf8(_bytes) {
                 Ok(str) => deserialize::Result::Ok(UserStatus::from_str(str).unwrap()),
-                Err(_e) => Err("Unrecognized enumerate variant".into())
-            }
+                Err(_e) => Err("Unrecognized enumerate variant".into()),
+            },
         }
     }
 }
-

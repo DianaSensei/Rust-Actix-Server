@@ -6,11 +6,13 @@ use once_cell::sync::Lazy;
 embed_migrations!();
 
 type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
-type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
+pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 static DB_CONNECTION_POOL: Lazy<Pool> = Lazy::new(|| {
     let manager = ConnectionManager::<PgConnection>::new(&*config::CONFIG.database_url);
-    let pool = Pool::builder().build(manager).expect("Failed to create database connection pool");
+    let pool = Pool::builder()
+        .build(manager)
+        .expect("Failed to create database connection pool");
     info!("POSTGRES CLIENT INITIATE: [SUCCESS]");
     pool
 });
@@ -23,5 +25,7 @@ pub fn init_and_run_migration() {
 }
 
 pub fn get_database_connection() -> DbConnection {
-    DB_CONNECTION_POOL.get().expect("Get database connection error")
+    DB_CONNECTION_POOL
+        .get()
+        .expect("Get database connection error")
 }

@@ -20,7 +20,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "{{ code: {}, message: {}, data: {}}})",
+            "{{ \"code\": {}, \"message\": {}, \"data\": {}}})",
             self.code, self.message, self.data
         )
     }
@@ -39,12 +39,9 @@ impl<T> From<DieselError> for ServerResponse<T> {
     }
 }
 
-impl<T> From<ServerResponse<T>> for HttpResponse
-where
-    T: Serialize,
-{
-    fn from(res: ServerResponse<T>) -> Self {
-        match res {
+impl<T: Serialize> Into<HttpResponse> for ServerResponse<T> {
+    fn into(self) -> HttpResponse {
+        match self {
             ServerResponse::BadRequest(err) => HttpResponse::BadRequest().json(err),
             ServerResponse::NotFound => HttpResponse::NotFound().finish(),
             ServerResponse::Unauthorized(err) => HttpResponse::Unauthorized().json(err),
@@ -64,11 +61,11 @@ impl<T> From<ValidationErrors> for ServerResponse<T> {
     fn from(errors: ValidationErrors) -> Self {
         let mut err_map = JsonMap::new();
         for (field, errors) in errors.field_errors().iter() {
-            let errors: Vec<Json> = errors.iter().map(|error| json!(error.message)).collect();
+            let errors: Vec<Json> = errors.iter().map(|error| json!(error)).collect();
             err_map.insert(field.to_string(), json!(errors));
         }
 
-        ServerResponse::BadRequest(json!(err_map))
+        ServerResponse::BadRequest(json!({ "fields": json!(err_map) }))
     }
 }
 

@@ -1,79 +1,14 @@
-use diesel::pg::Pg;
-use diesel::prelude::*;
-use diesel::query_builder::*;
-use diesel::query_dsl::methods::LoadQuery;
-use diesel::sql_types::BigInt;
-use crate::model::domain::pagination_result::PaginationResult;
-
-pub trait Paginate: Sized {
-    fn paginate(self, page: i64) -> Paginated<Self>;
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Pagination {
+    pub number_of_elements: usize,
+    pub page: u32,
+    pub page_size: u32,
+    pub total_pages: u32,
+    pub total_elements: usize,
 }
 
-impl<T> Paginate for T {
-    fn paginate(self, page: i64) -> Paginated<Self> {
-        Paginated {
-            query: self,
-            per_page: DEFAULT_PER_PAGE,
-            page,
-        }
-    }
-}
-
-const DEFAULT_PER_PAGE: i64 = 10;
-
-#[derive(Debug, Clone, Copy, QueryId)]
-pub struct Paginated<T> {
-    query: T,
-    page: i64,
-    per_page: i64,
-}
-
-impl<T> Paginated<T> {
-    pub fn per_page(self, per_page: i64) -> Self {
-        Paginated { per_page, ..self }
-    }
-
-    /// Return records, pagination info
-    pub fn load_and_count_pages<U>(self, conn: &mut PgConnection) -> QueryResult<(Vec<U>, PaginationResult)>
-                                   where Self: LoadQuery<PgConnection, (U, i64)>
-    {
-        let per_page = self.per_page;
-        let page = self.page;
-        let results = self.load::<(U, i64)>(conn)?;
-        let total = results.get(0).map(|x| x.1).unwrap_or(0);
-        let records: Vec<U> = results.into_iter().map(|x| x.0).collect();
-        let total_pages = (total as f64 / per_page as f64).ceil() as i64;
-
-        let pagination_result = PaginationResult {
-            number_of_elements: records.len(),
-            page,
-            page_size: per_page,
-            total_pages,
-            total_elements: total as usize
-        };
-
-        Ok((records, pagination_result))
-    }
-}
-
-impl<T: Query> Query for Paginated<T> {
-    type SqlType = (T::SqlType, BigInt);
-}
-
-impl<T> RunQueryDsl<PgConnection> for Paginated<T> {}
-
-impl<T> QueryFragment<Pg> for Paginated<T>
-    where
-        T: QueryFragment<Pg>,
-{
-    fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
-        out.push_sql("SELECT *, COUNT(*) OVER () FROM (");
-        self.query.walk_ast(out.reborrow())?;
-        out.push_sql(") t LIMIT ");
-        out.push_bind_param::<BigInt, _>(&self.per_page)?;
-        out.push_sql(" OFFSET ");
-        let offset = self.page * self.per_page;
-        out.push_bind_param::<BigInt, _>(&offset)?;
-        Ok(())
+impl std::fmt::Display for Pagination {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", serde_json::to_string(self).unwrap())
     }
 }

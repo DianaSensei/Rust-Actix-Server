@@ -1,11 +1,10 @@
 use serde_json::Value as Json;
-use crate::model::response::response::Response;
 use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq)]
 pub enum ServerResponse<T> {
     #[error("Success")]
-    Success(Response<T>),
+    Success(T),
 
     #[error("Bad Request")]
     BadRequest(Json),

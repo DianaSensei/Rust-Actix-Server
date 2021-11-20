@@ -22,11 +22,11 @@ mod middleware;
 #[allow(dead_code)]
 mod model;
 #[allow(dead_code)]
+mod repository;
+#[allow(dead_code)]
 mod services;
 #[allow(dead_code)]
 mod utils;
-#[allow(dead_code)]
-mod repository;
 
 #[actix_web::main]
 async fn main() {
@@ -54,7 +54,10 @@ fn log_config() {
     use std::io::Write;
     dotenv::dotenv().ok();
 
-    std::env::set_var("RUST_LOG", "info, actix_web=info,actix_server=info,actix_http=trace");
+    std::env::set_var(
+        "RUST_LOG",
+        "info, actix_web=info,actix_server=info,actix_http=trace",
+    );
     std::env::set_var("RUST_LOG_STYLE", "always");
     // std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
 

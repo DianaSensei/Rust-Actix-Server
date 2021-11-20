@@ -1,7 +1,7 @@
-use std::time::Duration;
 use once_cell::sync::OnceCell;
-use rdkafka::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
+use rdkafka::ClientConfig;
+use std::time::Duration;
 
 use crate::config;
 
@@ -19,10 +19,16 @@ pub async fn get_kafka_connection() -> Option<&'static FutureProducer> {
 
     if !*initialized {
         if let Ok(conn) = ClientConfig::new()
-            .set("bootstrap.servers", config::CONFIG.kafka_broker_url.as_str())
-            .set("message.timeout.ms", config::CONFIG.kafka_message_timeout.as_str())
-            .create() {
-
+            .set(
+                "bootstrap.servers",
+                config::CONFIG.kafka_broker_url.as_str(),
+            )
+            .set(
+                "message.timeout.ms",
+                config::CONFIG.kafka_message_timeout.as_str(),
+            )
+            .create()
+        {
             if let Ok(_) = KAFKA_CONNECTION.set(conn) {
                 info!("KAFKA CLIENT INITIATE: [SUCCESS]");
                 *initialized = true;
@@ -35,12 +41,15 @@ pub async fn get_kafka_connection() -> Option<&'static FutureProducer> {
 }
 
 async fn send_message(producer: FutureProducer, topic: String, payload: String) {
-    let produce_future = producer.send::<String,_,_>(
+    let produce_future = producer.send::<String, _, _>(
         FutureRecord::to(topic.as_str()).payload(payload.as_str()),
-        Duration::from_secs(0)
+        Duration::from_secs(0),
     );
 
-    info!("Send Kafka Message to topic `{}`: body `{}`", topic, payload);
+    info!(
+        "Send Kafka Message to topic `{}`: body `{}`",
+        topic, payload
+    );
 
     match produce_future.await {
         Ok(delivery) => println!("Kafka produce result: {:?}", delivery),
