@@ -11,6 +11,7 @@ on:
       - '!master'   # excludes master
 
 env:
+  CARGO_INCREMENTAL: 0
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -24,29 +25,17 @@ jobs:
       - name: Prepare Systemt Library
         run: sudo apt-get update && sudo apt-get install libsasl2-dev
 
-      - name: Run cargo check
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@ce325b60658c1b38465c06cc965b79baf32c1e72
+      
+      - name: Build
         uses: actions-rs/cargo@v1
         with:
-          command: check
-                    
-  build_test:
-    needs: [check]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout Source
-      uses: actions/checkout@v2
-    
-    - name: Prepare Systemt Library
-      run: sudo apt-get update && sudo apt-get install libsasl2-dev
-      
-    - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --verbose
-      
-    - name: Run tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose
+          command: build
+          args: --verbose
+          
+      - name: Tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: -- --nocapture --quiet
