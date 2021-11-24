@@ -1,1 +1,2 @@
-pub mod get_all_users;
+mod update_request;
+mod register_request;

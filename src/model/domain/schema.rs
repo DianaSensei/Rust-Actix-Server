@@ -1,5 +1,4 @@
 table! {
-    use crate::model::domain::language::LanguageType;
     use diesel::sql_types::*;
 
     users (id) {
@@ -10,9 +9,8 @@ table! {
         first_name -> Nullable<Text>,
         last_name -> Nullable<Text>,
         phone_number -> Nullable<Text>,
-        // status -> Text,
+        status -> Text,
         role -> Text,
-        // language -> LanguageType,
         created_by -> Text,
         created_time_utc -> Timestamp,
         updated_by -> Text,

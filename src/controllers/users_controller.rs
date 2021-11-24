@@ -44,7 +44,7 @@ async fn get_all_users(pagination: web::Query<PageRequest>) -> HttpResponse {
         return ServerResponse::<i64>::from(e).into();
     }
 
-    let result = users_repository::get_all_users(pagination.page, pagination.pagesize).await;
+    let result = users_repository::get_all_users(pagination.page, pagination.page_size).await;
     info!("Response: {}", result);
     ServerResponse::Success(result).into()
 }

@@ -5,8 +5,8 @@ pub struct PageRequest {
     pub page: i64,
 
     #[validate(range(min = 1))]
-    #[serde(default = "default_page_size")]
-    pub pagesize: i64,
+    #[serde(default = "default_page_size", rename = "pageSize")]
+    pub page_size: i64,
 }
 
 fn default_page_size() -> i64 {
