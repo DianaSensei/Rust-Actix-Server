@@ -1,7 +1,7 @@
 use actix_web::dev::{MessageBody, Service, Transform};
 use actix_web::http::header;
 use actix_web::http::Method;
-use actix_web::web::BytesMut;
+use actix_web::web::{BytesMut};
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage};
 use futures::future::{ok, Future, Ready};
 use futures::StreamExt;
@@ -53,14 +53,14 @@ where
     }
 
     fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
-        info!(" --------");
-        info!(
-            "{:#?}: {:#?}",
-            header::ACCEPT.as_str(),
-            req.headers()
-                .get(header::ACCEPT)
-                .unwrap_or(&header::HeaderValue::from_str("").unwrap())
-        );
+        info!(" Request --------");
+        // info!(
+        //     "{:#?}: {:#?}",
+        //     header::ACCEPT.as_str(),
+        //     req.headers()
+        //         .get(header::ACCEPT)
+        //         .unwrap_or(&header::HeaderValue::from_str("").unwrap())
+        // );
         info!(
             "{:#?}: {:#?}",
             header::USER_AGENT.as_str(),
@@ -101,9 +101,13 @@ where
                 && !(req.method() == Method::HEAD)
             {
                 let json: serde_json::Value = serde_json::from_slice(&*body).unwrap();
-                // let request = ServiceRequest::from(req);
                 info!("\"body\": {}", json);
             }
+            //
+
+            let mut payload = actix_http::h1::Payload::empty();
+            payload.unread_data(body.freeze());
+            req.set_payload(payload.into());
 
             // Wait for next process
             Ok(svc.call(req).await?)

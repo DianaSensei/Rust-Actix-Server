@@ -8,7 +8,6 @@ CREATE TABLE users
     last_name        VARCHAR(50),
     phone_number     VARCHAR(20),
     status           VARCHAR(20)  NOT NULL,
-    language         VARCHAR      NOT NULL,
     role             VARCHAR(50)  NOT NULL,
     created_by       VARCHAR      NOT NULL,
     created_time_utc TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,

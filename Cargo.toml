@@ -19,6 +19,7 @@ go-faster = []
 #framework
 actix = "0.12"
 actix-web = "3"
+actix-http = "2"
 #actix-files = "0.5"
 actix-cors = "0.5"
 #actix-session = "0.4.1"
@@ -97,3 +98,5 @@ chrono = { version = "0.4", features = ["serde"] }
 
 #Metric
 #metrics = "0.17"
+
+itertools = "0.10.0"
