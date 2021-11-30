@@ -3,7 +3,7 @@ use actix_web::{web, HttpResponse, Scope};
 
 pub fn router() -> Scope {
     web::scope("/api/v1/health")
-        .service(web::resource("health").to(get_health))
+        .service(web::resource("").to(get_health))
 }
 
 async fn get_health() -> HttpResponse {

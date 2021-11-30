@@ -24,10 +24,11 @@ pub struct Config {
     pub dev_mode: bool,
 
     #[serde(default = "default_hasher_scheme_version")]
-    pub scheme_hasher_version: usize, //pub session_key: String,
-                                      //pub session_name:String,
-                                      //pub session_secure: bool,
-                                      //pub session_timeout: i64
+    pub scheme_hasher_version: usize,
+    //pub session_key: String,
+    //pub session_name:String,
+    //pub session_secure: bool,
+    //pub session_timeout: i64
 }
 
 pub static CONFIG: Lazy<Config> = Lazy::new(get_config);

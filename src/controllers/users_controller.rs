@@ -53,32 +53,38 @@ async fn create_user(register: web::Json<Register>) -> HttpResponse {
         return ServerResponse::<i64>::from(e).into();
     }
 
-    let password = register.password.as_ref().unwrap();
     // Do Hash Password with Argon2 Algorithm
-    let hashed_password = get_argon2_hasher().hash(password.as_str());
+    let password = register.password.clone().unwrap();
+    let hashed_password = web::block(move || {
+        get_argon2_hasher().hash(password.as_str())
+    }).await;
+
     if let Err(e) = hashed_password {
         error!("Hash password error: {:?}", e);
         return ServerResponse::<i64>::InternalServerError.into();
     }
 
-    let user = NewUser {
-        email: register.email.as_ref().unwrap().to_string(),
-        user_name: None,
-        hashed_password: hashed_password.unwrap(),
-        first_name: None,
-        last_name: None,
-        phone_number: None,
-        status: UserStatus::Inactive,
-        role: UserRole::User,
-        created_by: "REGISTER".to_string(),
-        created_time_utc: Utc::now().naive_utc(),
-        updated_by: "REGISTER".to_string(),
-        updated_time_utc: Utc::now().naive_utc()
-    };
+    let email = register.email.clone().unwrap();
+    let result = web::block(move ||{
+        let user = NewUser {
+            email,
+            user_name: None,
+            hashed_password: hashed_password.unwrap(),
+            first_name: None,
+            last_name: None,
+            phone_number: None,
+            status: UserStatus::Inactive,
+            role: UserRole::User,
+            created_by: "REGISTER".to_string(),
+            created_time_utc: Utc::now().naive_utc(),
+            updated_by: "REGISTER".to_string(),
+            updated_time_utc: Utc::now().naive_utc()
+        };
+        users_repository::create_user(user)
+    }).await;
 
-    let result = users_repository::create_user(user).await;
     if let Err(e) = result {
-        error!("Save New User error: {:?}", e);
+        error!("Save new User error: {:?}", e);
         return ServerResponse::<i64>::InternalServerError.into();
     }
 
@@ -92,8 +98,16 @@ async fn get_all_users(pagination: web::Query<PageRequest>) -> HttpResponse {
         return ServerResponse::<i64>::from(e).into();
     }
 
-    let result = users_repository::get_all_users(pagination.page, pagination.page_size).await;
-    let page_response : PageResponse<ResponseUser> = result.into();
+    let result = web::block(move || {
+        users_repository::get_all_users(pagination.page, pagination.page_size)
+    }).await;
+
+    if let Err(e) = result {
+        error!("Get User error: {:?}", e);
+        return ServerResponse::<i64>::InternalServerError.into();
+    }
+
+    let page_response : PageResponse<ResponseUser> = result.unwrap().into();
     info!("Response: {}", page_response);
     ServerResponse::Success(page_response).into()
 }

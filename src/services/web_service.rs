@@ -8,16 +8,16 @@ use actix_web::{
     middleware::Compress,
     web, App, HttpResponse, HttpServer,
 };
+use listenfd::ListenFd;
 
 pub async fn start_web_service() {
-    let _ = HttpServer::new(move || {
+    let mut server = HttpServer::new(move || {
         App::new()
             .wrap(Compress::default())
             // .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
             .wrap(middleware::LoggingRequestMiddleware)
             // Cors Config
             .wrap(cors_config())
-            // .data(natActorAddr)
             // Json Handler Config
             .data(json_config())
             // Default Error Handler
@@ -31,11 +31,14 @@ pub async fn start_web_service() {
             .configure(controllers::router::global_router)
             // Default EndPoint
             .default_service(web::route().to(HttpResponse::NotFound))
-    })
-    .bind(&config::CONFIG.server)
-    .unwrap()
-    .run()
-    .await;
+    });
+
+    server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
+        Some(listener) => server.listen(listener).unwrap(),
+        None => server.bind(&config::CONFIG.server).unwrap(),
+    };
+
+    let _ = server.run().await;
 }
 
 fn json_config() -> web::JsonConfig {

@@ -28,7 +28,7 @@ actix-cors = "0.5"
 
 #ssl
 openssl = { version = "0.10", features = ["v110"] }
-
+listenfd = "0.3"
 #Message broker
 #nats client
 nats = "0.15"

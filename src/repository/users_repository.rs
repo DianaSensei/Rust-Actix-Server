@@ -5,7 +5,7 @@ use crate::model::response::page_response::PageResponse;
 use crate::services::client::get_database_connection;
 use diesel::prelude::*;
 
-pub async fn get_all_users(page: i64, per_page: i64) -> PageResponse<User> {
+pub fn get_all_users(page: i64, per_page: i64) -> QueryResult<PageResponse<User>> {
     let conn = get_database_connection();
 
     let query = users::table.filter(users::created_time_utc.is_not_null());
@@ -31,19 +31,19 @@ pub async fn get_all_users(page: i64, per_page: i64) -> PageResponse<User> {
         total_elements: total as usize,
     };
 
-    PageResponse {
+    Ok(PageResponse {
         data: users,
         page_info,
-    }
+    })
 }
 
-pub async fn create_user(user: NewUser) -> QueryResult<User> {
+pub fn create_user(user: NewUser) -> QueryResult<User> {
     let conn = get_database_connection();
 
     diesel::insert_into(users::table).values(&user).get_result(&conn)
 }
 
-pub async fn update_user(user: User) -> QueryResult<User> {
+pub fn update_user(user: User) -> QueryResult<User> {
     let conn = get_database_connection();
 
     diesel::update(users::table).set(&user).get_result(&conn)

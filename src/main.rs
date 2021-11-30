@@ -33,12 +33,12 @@ async fn main() {
     log_config();
 
     // Create client connections
-    services::client::get_kafka_connection().await;
-    services::client::get_nats_connection().await;
-    services::client::get_redis_connection().await;
-    services::client::get_smtp_connection().await;
+    // services::client::get_kafka_connection().await;
+    // services::client::get_nats_connection().await;
+    // services::client::get_redis_connection().await;
+    // services::client::get_smtp_connection().await;
 
-    utils::hasher::get_argon2_hasher();
+    // utils::hasher::get_argon2_hasher();
     // Create Database connection and run migration
     services::client::postgres_client_service::init_and_run_migration();
 
@@ -56,7 +56,7 @@ fn log_config() {
 
     std::env::set_var(
         "RUST_LOG",
-        "info, actix_web=info,actix_server=info,actix_http=trace",
+        "info, actix_web=info,actix_server=info,actix_http=info",
     );
     std::env::set_var("RUST_LOG_STYLE", "always");
     // std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
