@@ -2,15 +2,13 @@ use crate::model::domain::pagination::Pagination;
 use crate::model::domain::schema::users;
 use crate::model::domain::users::{NewUser, User};
 use crate::model::response::page_response::PageResponse;
-use crate::services::client::get_database_connection;
 use diesel::prelude::*;
+use crate::services::client::postgres_client_service::DbConnection;
 
-pub fn get_all_users(page: i64, per_page: i64) -> QueryResult<PageResponse<User>> {
-    let conn = get_database_connection();
-
+pub fn get_all_users(page: i64, per_page: i64, conn: &DbConnection) -> QueryResult<PageResponse<User>> {
     let query = users::table.filter(users::created_time_utc.is_not_null());
 
-    let total: i64 = query.clone().count().first(&conn).unwrap_or(0);
+    let total: i64 = query.clone().count().first(conn).unwrap_or(0);
 
     let users = query
         .select(users::all_columns)
@@ -18,7 +16,7 @@ pub fn get_all_users(page: i64, per_page: i64) -> QueryResult<PageResponse<User>
         .order(users::id)
         .filter(users::id.ge((page * per_page) as i32))
         .limit(per_page)
-        .load::<User>(&conn)
+        .load::<User>(conn)
         .unwrap_or_default();
 
     let total_pages = (total as f64 / per_page as f64).ceil() as u32;
@@ -37,16 +35,12 @@ pub fn get_all_users(page: i64, per_page: i64) -> QueryResult<PageResponse<User>
     })
 }
 
-pub fn create_user(user: NewUser) -> QueryResult<User> {
-    let conn = get_database_connection();
-
+pub fn create_user(user: NewUser, conn: &DbConnection) -> QueryResult<User> {
     diesel::insert_into(users::table)
         .values(&user)
-        .get_result(&conn)
+        .get_result(conn)
 }
 
-pub fn update_user(user: User) -> QueryResult<User> {
-    let conn = get_database_connection();
-
-    diesel::update(users::table).set(&user).get_result(&conn)
+pub fn update_user(user: User, conn: &DbConnection) -> QueryResult<User> {
+    diesel::update(users::table).set(&user).get_result(conn)
 }

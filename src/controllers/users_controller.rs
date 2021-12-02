@@ -12,9 +12,12 @@ use crate::utils::hasher::get_argon2_hasher;
 use crate::utils::translations::*;
 use actix_web::{guard, web, HttpResponse, Scope};
 use chrono::Utc;
+use diesel::Connection;
+use diesel::connection::TransactionManager;
 use rosetta_i18n::Language;
 use rosetta_i18n::LanguageId;
 use validator::Validate;
+use crate::services::client::get_database_connection;
 
 pub fn router() -> Scope {
     web::scope("/api/v1/users")
@@ -76,6 +79,7 @@ async fn create_user(
 
     let email = register.email.clone().unwrap();
     let result = web::block(move || {
+        let conn = get_database_connection();
         let user = NewUser {
             email,
             user_name: None,
@@ -90,7 +94,7 @@ async fn create_user(
             updated_by: "REGISTER".to_string(),
             updated_time_utc: Utc::now().naive_utc(),
         };
-        users_repository::create_user(user)
+        users_repository::create_user(user, &conn)
     })
     .await;
 
@@ -121,14 +125,31 @@ async fn get_all_users(
     let lang = Lang::from_language_id(&LanguageId::new(language.value.as_str()))
         .unwrap_or(Lang::fallback());
 
+
     let result =
-        web::block(move || users_repository::get_all_users(pagination.page, pagination.page_size))
-            .await;
+        web::block(move || {
+            let conn = get_database_connection();
+            let _ = conn.transaction_manager().begin_transaction(&conn);
+            info!("Begin transaction");
+            let res = users_repository::get_all_users(pagination.page, pagination.page_size, &conn);
+
+            if let Err(e) = res {
+                let _ = conn.transaction_manager().rollback_transaction(&conn);
+                info!("Rollback transaction");
+                return Err(e);
+            }
+            let _ = conn.transaction_manager().commit_transaction(&conn);
+            info!("Committed transaction");
+
+            res
+        }).await;
 
     if let Err(e) = result {
         error!("Get User error: {:?}", e);
         return ErrResponse::from(e).into();
     }
+
+
 
     let page_response: PageResponse<ResponseUser> = result.unwrap().into();
     info!("Response: {}", page_response);
