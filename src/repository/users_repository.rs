@@ -40,7 +40,9 @@ pub fn get_all_users(page: i64, per_page: i64) -> QueryResult<PageResponse<User>
 pub fn create_user(user: NewUser) -> QueryResult<User> {
     let conn = get_database_connection();
 
-    diesel::insert_into(users::table).values(&user).get_result(&conn)
+    diesel::insert_into(users::table)
+        .values(&user)
+        .get_result(&conn)
 }
 
 pub fn update_user(user: User) -> QueryResult<User> {

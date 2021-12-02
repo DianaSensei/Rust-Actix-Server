@@ -6,7 +6,7 @@ use actix_web::{
     error, http,
     middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers},
     middleware::Compress,
-    web, App, HttpResponse, HttpServer,
+    web, App, HttpRequest, HttpResponse, HttpServer,
 };
 use listenfd::ListenFd;
 
@@ -44,10 +44,7 @@ pub async fn start_web_service() {
 fn json_config() -> web::JsonConfig {
     web::JsonConfig::default()
         .limit(4096)
-        .error_handler(|err, req| {
-            error!("Parse Json {:?} cause error: {:?}", req, err);
-            error::InternalError::from_response(err, HttpResponse::BadRequest().finish()).into()
-        })
+        .error_handler(json_error_handler)
 }
 
 fn cors_config() -> Cors {
@@ -58,4 +55,18 @@ fn cors_config() -> Cors {
         .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE, ACCEPT])
         .supports_credentials()
         .max_age(3600)
+}
+
+fn json_error_handler(err: error::JsonPayloadError, _req: &HttpRequest) -> error::Error {
+    use actix_web::error::JsonPayloadError;
+
+    let detail = err.to_string();
+    let resp = match &err {
+        JsonPayloadError::ContentType => HttpResponse::UnsupportedMediaType().body(detail),
+        JsonPayloadError::Deserialize(json_err) if json_err.is_data() => {
+            HttpResponse::UnprocessableEntity().body(detail)
+        }
+        _ => HttpResponse::BadRequest().body(detail),
+    };
+    error::InternalError::from_response(err, resp).into()
 }

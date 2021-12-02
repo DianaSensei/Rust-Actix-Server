@@ -1,13 +1,25 @@
 use diesel::deserialize::{self, FromSql};
 use diesel::pg::Pg;
 use diesel::serialize::{self, IsNull, Output, ToSql};
+use diesel::sql_types::Text;
 use diesel::AsExpression;
 use diesel::FromSqlRow;
-use diesel::sql_types::Text;
 use std::io::Write;
 use std::str::FromStr;
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, AsExpression, FromSqlRow, EnumString, Display, EnumCount, EnumDiscriminants)]
+#[derive(
+    Serialize,
+    Deserialize,
+    Debug,
+    Copy,
+    Clone,
+    AsExpression,
+    FromSqlRow,
+    EnumString,
+    Display,
+    EnumCount,
+    EnumDiscriminants,
+)]
 #[sql_type = "Text"]
 pub enum Language {
     En,

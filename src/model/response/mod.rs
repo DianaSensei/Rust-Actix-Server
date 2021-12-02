@@ -1,4 +1,3 @@
-pub mod error;
 pub mod health_response;
 pub mod login_response;
 pub mod page_response;

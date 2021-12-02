@@ -87,7 +87,7 @@ config = "0.11"
 #Static sync variable
 #lazy_static = "1.4"
 #Uuid generator
-uuid = { version = "0.8.1", features = ["serde", "v4"] }
+uuid = { version = "1.0.0-alpha.1", features = ["serde", "fast-rng", "v4", "macro-diagnostics"] }
 #Hasher
 libreauth = "0.14"
 
@@ -100,3 +100,9 @@ chrono = { version = "0.4", features = ["serde"] }
 #metrics = "0.17"
 
 itertools = "0.10.0"
+
+#I18n
+rosetta-i18n = "0.1"
+
+#[build-dependencies]
+rosetta-build = "0.1"

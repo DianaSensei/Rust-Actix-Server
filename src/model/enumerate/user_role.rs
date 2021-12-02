@@ -6,7 +6,20 @@ use diesel::{deserialize, serialize};
 use std::io::Write;
 use std::str::FromStr;
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, AsExpression, FromSqlRow, EnumString, Display, EnumCount, EnumDiscriminants)]
+#[derive(
+    Serialize,
+    Deserialize,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    AsExpression,
+    FromSqlRow,
+    EnumString,
+    Display,
+    EnumCount,
+    EnumDiscriminants,
+)]
 #[sql_type = "Text"]
 pub enum UserRole {
     Admin,

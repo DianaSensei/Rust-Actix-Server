@@ -1,11 +1,11 @@
 use super::schema::users;
+use crate::model::enumerate::user_role::UserRole;
 use crate::model::enumerate::user_status::UserStatus;
+use crate::model::response::page_response::PageResponse;
 use chrono::NaiveDateTime;
+use itertools::Itertools;
 use std::fmt;
 use std::fmt::Formatter;
-use crate::model::enumerate::user_role::UserRole;
-use crate::model::response::page_response::PageResponse;
-use itertools::Itertools;
 
 #[derive(Serialize, Deserialize, Queryable, Identifiable, AsChangeset, Debug, Clone, PartialEq)]
 #[table_name = "users"]
@@ -71,11 +71,10 @@ impl From<User> for ResponseUser {
             created_by: user.created_by.clone(),
             created_time_utc: user.created_time_utc.clone(),
             updated_by: user.updated_by.clone(),
-            updated_time_utc: user.updated_time_utc.clone()
+            updated_time_utc: user.updated_time_utc.clone(),
         }
     }
 }
-
 
 impl From<&User> for ResponseUser {
     fn from(user: &User) -> Self {
@@ -87,7 +86,11 @@ impl From<PageResponse<User>> for PageResponse<ResponseUser> {
     fn from(page_user: PageResponse<User>) -> Self {
         PageResponse {
             page_info: page_user.page_info,
-            data: page_user.data.iter().map_into::<ResponseUser>().collect_vec()
+            data: page_user
+                .data
+                .iter()
+                .map_into::<ResponseUser>()
+                .collect_vec(),
         }
     }
 }

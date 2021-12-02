@@ -1,7 +1,7 @@
 use actix_web::dev::{MessageBody, Service, Transform};
 use actix_web::http::header;
 use actix_web::http::Method;
-use actix_web::web::{BytesMut};
+use actix_web::web::BytesMut;
 use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpMessage};
 use futures::future::{ok, Future, Ready};
 use futures::StreamExt;

@@ -1,15 +1,17 @@
-use crate::model::enumerate::response::ServerResponse;
-use actix_web::{error, HttpRequest, HttpResponse};
+use actix_web::error::BlockingError;
+use actix_web::HttpResponse;
 use diesel::result::Error as DieselError;
 use serde::Serialize;
 use serde_json::{Map as JsonMap, Value as Json};
 use std::fmt;
+use std::fmt::Debug;
+use std::ops::{Deref, DerefMut};
 use validator::ValidationErrors;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Response<T> {
     pub code: u16,
-    pub message: String,
+    pub message: &'static str,
     pub data: T,
 }
 
@@ -26,59 +28,59 @@ where
     }
 }
 
-impl<T> From<DieselError> for ServerResponse<T> {
-    fn from(error: DieselError) -> ServerResponse<T> {
-        match error {
-            DieselError::DatabaseError(_, _err) => ServerResponse::InternalServerError,
-            DieselError::NotFound => ServerResponse::NotFound,
+pub struct ErrResponse(HttpResponse);
+
+impl From<DieselError> for ErrResponse {
+    fn from(error: DieselError) -> Self {
+        let res = match error {
+            DieselError::DatabaseError(_, _err) => HttpResponse::InternalServerError().finish(),
+            DieselError::NotFound => HttpResponse::NotFound().finish(),
             err => {
                 error!("Unknown Diesel error: {}", err);
-                ServerResponse::InternalServerError
+                HttpResponse::InternalServerError().finish()
             }
-        }
+        };
+        ErrResponse(res)
     }
 }
 
-impl<T: Serialize> Into<HttpResponse> for ServerResponse<T> {
-    fn into(self) -> HttpResponse {
-        match self {
-            ServerResponse::BadRequest(err) => HttpResponse::BadRequest().json(err),
-            ServerResponse::NotFound => HttpResponse::NotFound().finish(),
-            ServerResponse::Unauthorized(err) => HttpResponse::Unauthorized().json(err),
-            ServerResponse::Conflict => HttpResponse::Conflict().finish(),
-            ServerResponse::Forbidden(err) => HttpResponse::Forbidden().json(err),
-            ServerResponse::UnprocessableEntity(json) => HttpResponse::BadRequest().json(json),
-            ServerResponse::RequestTimeOut => HttpResponse::RequestTimeout().finish(),
-            ServerResponse::MethodNotAllowed => HttpResponse::MethodNotAllowed().finish(),
-            ServerResponse::BadGateway => HttpResponse::BadGateway().finish(),
-            ServerResponse::Success(data) => HttpResponse::Ok().json(data),
-            _ => HttpResponse::InternalServerError().finish(),
-        }
+impl<E> From<BlockingError<E>> for ErrResponse
+where
+    E: Debug,
+{
+    fn from(error: BlockingError<E>) -> Self {
+        error!("Blocking Error: {:?}", error);
+        ErrResponse(HttpResponse::InternalServerError().finish())
     }
 }
 
-impl<T> From<ValidationErrors> for ServerResponse<T> {
+impl From<ValidationErrors> for ErrResponse {
     fn from(errors: ValidationErrors) -> Self {
         let mut err_map = JsonMap::new();
         for (field, errors) in errors.field_errors().iter() {
             let errors: Vec<Json> = errors.iter().map(|error| json!(error)).collect();
             err_map.insert(field.to_string(), json!(errors));
         }
-
-        ServerResponse::BadRequest(json!({ "fields": json!(err_map) }))
+        ErrResponse(HttpResponse::BadRequest().json(json!({ "fields": json!(err_map) })))
     }
 }
 
-pub fn json_error_handler(err: error::JsonPayloadError, _req: &HttpRequest) -> error::Error {
-    use actix_web::error::JsonPayloadError;
+impl Into<HttpResponse> for ErrResponse {
+    fn into(self) -> HttpResponse {
+        self.0
+    }
+}
 
-    let detail = err.to_string();
-    let resp = match &err {
-        JsonPayloadError::ContentType => HttpResponse::UnsupportedMediaType().body(detail),
-        JsonPayloadError::Deserialize(json_err) if json_err.is_data() => {
-            HttpResponse::UnprocessableEntity().body(detail)
-        }
-        _ => HttpResponse::BadRequest().body(detail),
-    };
-    error::InternalError::from_response(err, resp).into()
+impl Deref for ErrResponse {
+    type Target = HttpResponse;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ErrResponse {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }

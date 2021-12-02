@@ -31,6 +31,7 @@ mod utils;
 #[actix_web::main]
 async fn main() {
     log_config();
+    i18n_init();
 
     // Create client connections
     // services::client::get_kafka_connection().await;
@@ -49,6 +50,17 @@ async fn main() {
     services::start_web_service().await;
 }
 
+fn i18n_init() {
+    if let Err(e) = rosetta_build::config()
+        .source("vn", "locales/vn.json")
+        .source("en", "locales/en.json")
+        .fallback("vn")
+        .output("target/rosetta_output.rs")
+        .generate()
+    {
+        error!("I18n init fail: {}", e);
+    }
+}
 fn log_config() {
     use env_logger::fmt::Color;
     use std::io::Write;

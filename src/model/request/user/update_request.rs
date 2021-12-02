@@ -1,4 +1,3 @@
-
 #[derive(Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct UpdateUser {
     // #[serde(rename = "firstName")]
