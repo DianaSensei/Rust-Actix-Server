@@ -43,10 +43,10 @@ impl ToSql<diesel::sql_types::Text, Pg> for UserStatus {
 impl FromSql<diesel::sql_types::Text, Pg> for UserStatus {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match bytes {
-            None => Err("Unrecognized enumerate variant".into()),
+            None => Err("Unrecognized enumerates variant".into()),
             Some(_bytes) => match std::str::from_utf8(_bytes) {
                 Ok(str) => deserialize::Result::Ok(UserStatus::from_str(str).unwrap()),
-                Err(_e) => Err("Unrecognized enumerate variant".into()),
+                Err(_e) => Err("Unrecognized enumerates variant".into()),
             },
         }
     }

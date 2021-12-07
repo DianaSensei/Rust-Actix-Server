@@ -1,5 +1,5 @@
 use crate::model::nats::*;
-use crate::services::client::get_nats_connection;
+use crate::services::clients::get_nats_connection;
 
 pub async fn start_registered_consumer() {
     create_users_topic().await;

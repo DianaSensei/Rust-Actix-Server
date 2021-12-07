@@ -1,4 +1,4 @@
-use crate::model::domain::pagination::Pagination;
+use crate::model::domains::pagination::Pagination;
 use serde::Serialize;
 use std::fmt;
 

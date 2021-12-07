@@ -1,4 +1,4 @@
-pub mod client;
+pub mod clients;
 mod nats_service;
 mod web_service;
 

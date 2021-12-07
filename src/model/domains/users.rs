@@ -1,7 +1,7 @@
 use super::schema::users;
-use crate::model::enumerate::user_role::UserRole;
-use crate::model::enumerate::user_status::UserStatus;
-use crate::model::response::page_response::PageResponse;
+use crate::model::enumerates::user_role::UserRole;
+use crate::model::enumerates::user_status::UserStatus;
+use crate::model::responses::page_response::PageResponse;
 use chrono::NaiveDateTime;
 use itertools::Itertools;
 use std::fmt;

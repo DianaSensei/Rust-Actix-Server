@@ -31,7 +31,7 @@ fn main() {
     let chunked_data = data.split_whitespace();
 
     // Iterate over the data segments.
-    // .enumerate() adds the current loop index to whatever is iterated
+    // .enumerates() adds the current loop index to whatever is iterated
     // the resulting tuple "(index, element)" is then immediately
     // "destructured" into two variables, "i" and "data_segment" with a
     // "destructuring assignment"

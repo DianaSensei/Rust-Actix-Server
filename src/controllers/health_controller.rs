@@ -1,4 +1,4 @@
-use crate::model::response::health_response::HealthResponse;
+use crate::model::responses::health_response::HealthResponse;
 use actix_web::{web, HttpResponse, Scope};
 
 pub fn router() -> Scope {

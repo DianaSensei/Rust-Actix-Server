@@ -18,11 +18,11 @@ mod config;
 #[allow(dead_code)]
 mod controllers;
 #[allow(dead_code)]
-mod middleware;
+mod middlewares;
 #[allow(dead_code)]
 mod model;
 #[allow(dead_code)]
-mod repository;
+mod repositories;
 #[allow(dead_code)]
 mod services;
 #[allow(dead_code)]
@@ -32,15 +32,15 @@ mod utils;
 async fn main() {
     log_config();
 
-    // Create client connections
-    // services::client::get_kafka_connection().await;
-    // services::client::get_nats_connection().await;
-    // services::client::get_redis_connection().await;
-    // services::client::get_smtp_connection().await;
+    // Create clients connections
+    // services::clients::get_kafka_connection().await;
+    // services::clients::get_nats_connection().await;
+    // services::clients::get_redis_connection().await;
+    // services::clients::get_smtp_connection().await;
 
     // utils::hasher::get_argon2_hasher();
     // Create Database connection and run migration
-    services::client::postgres_client_service::init_and_run_migration();
+    services::clients::postgres_client_service::init_and_run_migration();
 
     // Start Consumers
     services::start_registered_consumer().await;

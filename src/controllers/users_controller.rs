@@ -1,14 +1,14 @@
-use crate::model::domain::users::{NewUser, ResponseUser};
-use crate::model::enumerate::logic_code::StatusCode;
-use crate::model::enumerate::user_role::UserRole;
-use crate::model::enumerate::user_status::UserStatus;
-use crate::model::request::language_request::LanguageRequest;
-use crate::model::request::page_request::PageRequest;
-use crate::model::request::user::register_request::Register;
-use crate::model::response::page_response::PageResponse;
-use crate::model::response::response::{ErrResponse, Response};
-use crate::repository::users_repository;
-use crate::services::client::get_database_connection;
+use crate::model::domains::users::{NewUser, ResponseUser};
+use crate::model::enumerates::logic_code::StatusCode;
+use crate::model::enumerates::user_role::UserRole;
+use crate::model::enumerates::user_status::UserStatus;
+use crate::model::requests::language_request::LanguageRequest;
+use crate::model::requests::page_request::PageRequest;
+use crate::model::requests::user::register_request::Register;
+use crate::model::responses::page_response::PageResponse;
+use crate::model::responses::response::{ErrResponse, Response};
+use crate::repositories::users_repository;
+use crate::services::clients::get_database_connection;
 use crate::utils::hasher::get_argon2_hasher;
 use crate::utils::translations::*;
 use actix_web::{guard, web, HttpResponse, Scope};
@@ -59,7 +59,7 @@ async fn create_user(
     register: web::Json<Register>,
     language: web::Query<LanguageRequest>,
 ) -> HttpResponse {
-    // Do validate request
+    // Do validate requests
     if let Err(e) = register.validate() {
         return ErrResponse::from(e).into();
     }
@@ -116,7 +116,7 @@ async fn get_all_users(
     pagination: web::Query<PageRequest>,
     language: web::Query<LanguageRequest>,
 ) -> HttpResponse {
-    // Do validate request
+    // Do validate requests
     if let Err(e) = pagination.validate() {
         return ErrResponse::from(e).into();
     }

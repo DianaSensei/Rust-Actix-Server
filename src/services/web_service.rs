@@ -1,6 +1,6 @@
 use crate::config;
 use crate::controllers;
-use crate::middleware;
+use crate::middlewares;
 use actix_cors::Cors;
 use actix_web::{
     error, http,
@@ -15,7 +15,7 @@ pub async fn start_web_service() {
         App::new()
             .wrap(Compress::default())
             // .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
-            .wrap(middleware::LoggingRequestMiddleware)
+            .wrap(middlewares::LoggingRequestMiddleware)
             // Cors Config
             .wrap(cors_config())
             // Json Handler Config

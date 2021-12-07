@@ -30,9 +30,9 @@ actix-cors = "0.5"
 openssl = { version = "0.10", features = ["v110"] }
 listenfd = "0.3"
 #Message broker
-#nats client
+#nats clients
 nats = "0.15"
-#kafka client
+#kafka clients
 rdkafka = { version = "0.25", features = ["ssl", "sasl"] }
 
 #Orm
