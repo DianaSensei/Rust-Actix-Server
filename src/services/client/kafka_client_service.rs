@@ -9,7 +9,7 @@ static KAFKA_CONNECTION: OnceCell<FutureProducer> = OnceCell::new();
 static KAFKA_CONNECTION_INITIALIZED: OnceCell<tokio::sync::Mutex<bool>> = OnceCell::new();
 
 pub async fn get_kafka_connection() -> Option<&'static FutureProducer> {
-    if let Some(_) = KAFKA_CONNECTION.get() {
+    if KAFKA_CONNECTION.get().is_some() {
         return KAFKA_CONNECTION.get();
     }
 
@@ -29,7 +29,7 @@ pub async fn get_kafka_connection() -> Option<&'static FutureProducer> {
             )
             .create()
         {
-            if let Ok(_) = KAFKA_CONNECTION.set(conn) {
+            if KAFKA_CONNECTION.set(conn).is_ok() {
                 info!("KAFKA CLIENT INITIATE: [SUCCESS]");
                 *initialized = true;
             }

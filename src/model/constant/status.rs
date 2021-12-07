@@ -105,7 +105,7 @@ impl PartialEq<Status> for i16 {
 impl<'a> From<&'a Status> for Status {
     #[inline]
     fn from(t: &'a Status) -> Self {
-        t.clone()
+        *t
     }
 }
 

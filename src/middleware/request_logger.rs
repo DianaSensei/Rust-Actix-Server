@@ -37,6 +37,8 @@ pub struct LoggingMiddleware<S> {
     service: Rc<RefCell<S>>,
 }
 
+#[allow(clippy::type_complexity)]
+#[allow(clippy::needless_question_mark)]
 impl<S, B> Service for LoggingMiddleware<S>
 where
     S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
@@ -75,7 +77,7 @@ where
                 .get(header::HOST)
                 .unwrap_or(&header::HeaderValue::from_str("").unwrap())
         );
-        if let Some(_) = req.headers().get(header::AUTHORIZATION) {
+        if req.headers().get(header::AUTHORIZATION).is_some() {
             info!(
                 "{:#?}: \"****************************\"",
                 header::AUTHORIZATION.as_str()

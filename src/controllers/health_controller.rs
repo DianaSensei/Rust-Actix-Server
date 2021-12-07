@@ -8,6 +8,6 @@ pub fn router() -> Scope {
 async fn get_health() -> HttpResponse {
     HttpResponse::Ok().json(HealthResponse {
         status: "Ok".to_owned(),
-        version: "Cargo Version: ".to_string() + env!("CARGO_PKG_VERSION").into(),
+        version: "Cargo Version: ".to_string() + env!("CARGO_PKG_VERSION"),
     })
 }

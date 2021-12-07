@@ -65,9 +65,9 @@ impl From<ValidationErrors> for ErrResponse {
     }
 }
 
-impl Into<HttpResponse> for ErrResponse {
-    fn into(self) -> HttpResponse {
-        self.0
+impl From<ErrResponse> for HttpResponse {
+    fn from(err: ErrResponse) -> Self {
+        err.0
     }
 }
 

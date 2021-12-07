@@ -66,7 +66,7 @@ async fn create_user(
 
     // Detect Language Mapper
     let lang = Lang::from_language_id(&LanguageId::new(language.value.as_str()))
-        .unwrap_or(Lang::fallback());
+        .unwrap_or_else(Lang::fallback);
 
     // Do Hash Password with Argon2 Algorithm
     let password = register.password.clone().unwrap();
@@ -103,7 +103,7 @@ async fn create_user(
         return ErrResponse::from(e).into();
     }
 
-    let user_response = ResponseUser::from(result.unwrap().clone());
+    let user_response = ResponseUser::from(result.unwrap());
     info!("Response: {}", user_response);
     HttpResponse::Ok().json(Response {
         code: 0,
@@ -123,7 +123,7 @@ async fn get_all_users(
 
     // Detect Language Mapper
     let lang = Lang::from_language_id(&LanguageId::new(language.value.as_str()))
-        .unwrap_or(Lang::fallback());
+        .unwrap_or_else(Lang::fallback);
 
     let result = web::block(move || {
         let conn = get_database_connection();

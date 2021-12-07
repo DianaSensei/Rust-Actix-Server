@@ -66,12 +66,12 @@ impl From<User> for ResponseUser {
             first_name: user.first_name.clone(),
             last_name: user.last_name.clone(),
             phone_number: user.phone_number.clone(),
-            status: user.status.clone(),
-            role: user.role.clone(),
+            status: user.status,
+            role: user.role,
             created_by: user.created_by.clone(),
-            created_time_utc: user.created_time_utc.clone(),
+            created_time_utc: user.created_time_utc,
             updated_by: user.updated_by.clone(),
-            updated_time_utc: user.updated_time_utc.clone(),
+            updated_time_utc: user.updated_time_utc,
         }
     }
 }

@@ -9,7 +9,7 @@ static SMTP_CONNECTION: OnceCell<SmtpTransport> = OnceCell::new();
 static SMTP_CONNECTION_INITIALIZED: OnceCell<tokio::sync::Mutex<bool>> = OnceCell::new();
 
 pub async fn get_smtp_connection() -> Option<&'static SmtpTransport> {
-    if let Some(_) = SMTP_CONNECTION.get() {
+    if SMTP_CONNECTION.get().is_some() {
         return SMTP_CONNECTION.get();
     }
 
@@ -26,7 +26,7 @@ pub async fn get_smtp_connection() -> Option<&'static SmtpTransport> {
             let conn = conn_builder
                 .credentials(Credentials::new(smtp_username, smtp_password))
                 .build();
-            if let Ok(_) = SMTP_CONNECTION.set(conn) {
+            if SMTP_CONNECTION.set(conn).is_ok() {
                 info!("SMTP CLIENT INITIATE: [SUCCESS]");
                 *initialized = true;
             }
@@ -40,6 +40,5 @@ pub async fn get_smtp_connection() -> Option<&'static SmtpTransport> {
 pub async fn send_email(email: Message) -> Response {
     let mailer = get_smtp_connection().await.unwrap();
     // Send the email
-    let result = mailer.send(&email).unwrap();
-    result
+    mailer.send(&email).unwrap()
 }
