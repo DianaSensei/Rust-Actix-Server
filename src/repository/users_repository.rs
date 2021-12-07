@@ -2,10 +2,14 @@ use crate::model::domain::pagination::Pagination;
 use crate::model::domain::schema::users;
 use crate::model::domain::users::{NewUser, User};
 use crate::model::response::page_response::PageResponse;
-use diesel::prelude::*;
 use crate::services::client::postgres_client_service::DbConnection;
+use diesel::prelude::*;
 
-pub fn get_all_users(page: i64, per_page: i64, conn: &DbConnection) -> QueryResult<PageResponse<User>> {
+pub fn get_all_users(
+    page: i64,
+    per_page: i64,
+    conn: &DbConnection,
+) -> QueryResult<PageResponse<User>> {
     let query = users::table.filter(users::created_time_utc.is_not_null());
 
     let total: i64 = query.clone().count().first(conn).unwrap_or(0);
