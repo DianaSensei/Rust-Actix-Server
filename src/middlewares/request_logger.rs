@@ -12,13 +12,11 @@ use std::task::{Context, Poll};
 
 pub struct LoggingRequestMiddleware;
 
-impl<S: 'static, B> Transform<S> for LoggingRequestMiddleware
+impl<S: 'static, B> Transform<S, ServiceRequest> for LoggingRequestMiddleware
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    B: MessageBody,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Transform = LoggingMiddleware<S>;
@@ -39,22 +37,20 @@ pub struct LoggingMiddleware<S> {
 
 #[allow(clippy::type_complexity)]
 #[allow(clippy::needless_question_mark)]
-impl<S, B> Service for LoggingMiddleware<S>
+impl<S: 'static, B> Service<ServiceRequest> for LoggingMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-    S::Future: 'static,
-    B: 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    B: MessageBody,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
         info!(" Request --------");
         // info!(
         //     "{:#?}: {:#?}",
@@ -70,13 +66,13 @@ where
                 .get(header::USER_AGENT)
                 .unwrap_or(&header::HeaderValue::from_str("").unwrap())
         );
-        info!(
-            "{:#?}: {:#?}",
-            header::HOST.as_str(),
-            req.headers()
-                .get(header::HOST)
-                .unwrap_or(&header::HeaderValue::from_str("").unwrap())
-        );
+
+        let s = if let Some(peer) = req.connection_info().remote_addr() {
+            (*peer).to_string()
+        } else {
+            "-".to_string()
+        };
+        info!("{:#?}: {:#?}", header::FROM.as_str(), s);
         if req.headers().get(header::AUTHORIZATION).is_some() {
             info!(
                 "{:#?}: \"****************************\"",
@@ -89,7 +85,7 @@ where
             info!("\"query\": {:#?}", req.query_string());
         }
 
-        let mut svc = self.service.clone();
+        let svc = self.service.clone();
 
         Box::pin(async move {
             let mut body = BytesMut::new();
@@ -116,3 +112,102 @@ where
         })
     }
 }
+
+// impl<S: Service<Req>, Req> Transform<S, Req> for LoggingRequestMiddleware
+// {
+//
+//     type Response = S::Response;
+//     ///     type Error = TimeoutError<S::Error>;
+//     ///     type InitError = S::Error;
+//     ///     type Transform = Timeout<S>;
+//     ///     type Future = Ready<Result<Self::Transform, Self::InitError>>;
+//     ///
+//
+//     type Error = Error;
+//     type Transform = LoggingMiddleware<S>;
+//     type InitError = S::Error;
+//     type Future = Ready<Result<Self::Transform, Self::InitError>>;
+//
+//     fn new_transform(&self, service: S) -> Self::Future {
+//         ok(LoggingMiddleware {
+//             service: Rc::new(RefCell::new(service)),
+//         })
+//     }
+// }
+
+//
+// #[allow(clippy::type_complexity)]
+// #[allow(clippy::needless_question_mark)]
+// impl<S, Req> Service<Req> for LoggingMiddleware<S>
+// {
+//
+//     type Response = ServiceResponse<S>;
+//     type Error = Error;
+//     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+//
+//     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+//         self.service.poll_ready(cx)
+//     }
+//
+//     fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
+//         info!(" Request --------");
+//         // info!(
+//         //     "{:#?}: {:#?}",
+//         //     header::ACCEPT.as_str(),
+//         //     req.headers()
+//         //         .get(header::ACCEPT)
+//         //         .unwrap_or(&header::HeaderValue::from_str("").unwrap())
+//         // );
+//         info!(
+//             "{:#?}: {:#?}",
+//             header::USER_AGENT.as_str(),
+//             req.headers()
+//                 .get(header::USER_AGENT)
+//                 .unwrap_or(&header::HeaderValue::from_str("").unwrap())
+//         );
+//         info!(
+//             "{:#?}: {:#?}",
+//             header::HOST.as_str(),
+//             req.headers()
+//                 .get(header::HOST)
+//                 .unwrap_or(&header::HeaderValue::from_str("").unwrap())
+//         );
+//         if req.headers().get(header::AUTHORIZATION).is_some() {
+//             info!(
+//                 "{:#?}: \"****************************\"",
+//                 header::AUTHORIZATION.as_str()
+//             );
+//         }
+//
+//         info!("\"path\": {:#?} {:#?}", req.method(), req.path());
+//         if !req.query_string().is_empty() {
+//             info!("\"query\": {:#?}", req.query_string());
+//         }
+//
+//         let mut svc = self.service.clone();
+//
+//         Box::pin(async move {
+//             let mut body = BytesMut::new();
+//             let mut stream = req.take_payload();
+//             while let Some(chunk) = stream.next().await {
+//                 body.extend_from_slice(&chunk?);
+//             }
+//
+//             if !body.size().is_eof()
+//                 && !(req.method() == Method::GET)
+//                 && !(req.method() == Method::HEAD)
+//             {
+//                 let json: serde_json::Value = serde_json::from_slice(&*body).unwrap();
+//                 info!("\"body\": {}", json);
+//             }
+//             //
+//
+//             let mut payload = actix_http::h1::Payload::empty();
+//             payload.unread_data(body.freeze());
+//             req.set_payload(payload.into());
+//
+//             // Wait for next process
+//             Ok(svc.call(req).await?)
+//         })
+//     }
+// }

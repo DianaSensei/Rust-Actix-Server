@@ -33,7 +33,18 @@ pub struct ErrResponse(HttpResponse);
 impl From<DieselError> for ErrResponse {
     fn from(error: DieselError) -> Self {
         let res = match error {
-            DieselError::DatabaseError(_, _err) => HttpResponse::InternalServerError().finish(),
+            DieselError::DatabaseError(kind, err) => {
+                error!("Diesel Error kind: {:?}, message: {}, detail: {:?}, hint: {:?}, table_name: {:?}, column_name: {:?}, constraint_name: {:?}",
+                    kind,
+                    err.message(),
+                    err.details(),
+                    err.hint(),
+                    err.table_name(),
+                    err.column_name(),
+                    err.constraint_name()
+                );
+                HttpResponse::InternalServerError().finish()
+            }
             DieselError::NotFound => HttpResponse::NotFound().finish(),
             err => {
                 error!("Unknown Diesel error: {}", err);
@@ -44,11 +55,33 @@ impl From<DieselError> for ErrResponse {
     }
 }
 
-impl<E> From<BlockingError<E>> for ErrResponse
-where
-    E: Debug,
-{
-    fn from(error: BlockingError<E>) -> Self {
+impl From<&DieselError> for ErrResponse {
+    fn from(error: &DieselError) -> Self {
+        let res = match error {
+            DieselError::DatabaseError(kind, err) => {
+                error!("Diesel Error kind: {:?}, message: {}, detail: {:?}, hint: {:?}, table_name: {:?}, column_name: {:?}, constraint_name: {:?}",
+                    kind,
+                    err.message(),
+                    err.details(),
+                    err.hint(),
+                    err.table_name(),
+                    err.column_name(),
+                    err.constraint_name()
+                );
+                HttpResponse::InternalServerError().finish()
+            }
+            DieselError::NotFound => HttpResponse::NotFound().finish(),
+            err => {
+                error!("Unknown Diesel error: {}", err);
+                HttpResponse::InternalServerError().finish()
+            }
+        };
+        ErrResponse(res)
+    }
+}
+
+impl From<BlockingError> for ErrResponse {
+    fn from(error: BlockingError) -> Self {
         error!("Blocking Error: {:?}", error);
         ErrResponse(HttpResponse::InternalServerError().finish())
     }

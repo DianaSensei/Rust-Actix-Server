@@ -6,10 +6,13 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]
-lto = true #thin/off/false
-opt-level = 2
+lto = true
+opt-level = 3
+codegen-units = 1
 
 [profile.dev]
+# Disabling debug info speeds up builds a bunch and we don't rely on it for debugging that much.
+debug = 0
 split-debuginfo = "unpacked"
 
 [features]
@@ -18,10 +21,11 @@ go-faster = []
 [dependencies]
 #framework
 actix = "0.12"
-actix-web = "3"
-actix-http = "2"
+actix-web = "4.0.0-beta.13"
+actix-http = "3.0.0-beta.14"
+awc = "3.0.0-beta.12"
 #actix-files = "0.5"
-actix-cors = "0.5"
+actix-cors = "0.6.0-beta.4"
 #actix-session = "0.4.1"
 #actix-web-httpauth = "0.5"
 #actix-web-grants = "2.2"
@@ -59,7 +63,7 @@ derive_more = "0.99"
 
 #Thread, async, runtime
 futures = "0.3"
-tokio = { version = "1.12", features = ["full"] }
+tokio = { version = "1.14", features = ["full"] }
 #Error customizer
 thiserror = "1.0"
 #pin-project = "1.0.7"

@@ -8,8 +8,7 @@ pub struct Authentication;
 
 impl FromRequest for Authentication {
     type Error = Error;
-    type Future = Ready<Result<Self, Error>>;
-    type Config = ();
+    type Future = Ready<Result<Self, Self::Error>>;
     fn from_request(req: &HttpRequest, _payload: &mut dev::Payload) -> Self::Future {
         let auth = req.headers().get("Authorization");
         match auth {

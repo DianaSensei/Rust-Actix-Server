@@ -2,10 +2,11 @@ use crate::config;
 use crate::controllers;
 use crate::middlewares;
 use actix_cors::Cors;
+use actix_web::web::Data;
 use actix_web::{
     error, http,
-    middleware::errhandlers::{ErrorHandlerResponse, ErrorHandlers},
     middleware::Compress,
+    middleware::{ErrorHandlerResponse, ErrorHandlers},
     web, App, HttpRequest, HttpResponse, HttpServer,
 };
 use listenfd::ListenFd;
@@ -19,7 +20,7 @@ pub async fn start_web_service() {
             // Cors Config
             .wrap(cors_config())
             // Json Handler Config
-            .data(json_config())
+            .app_data(Data::new(json_config()))
             // Default Error Handler
             .wrap(
                 ErrorHandlers::new().handler(http::StatusCode::INTERNAL_SERVER_ERROR, |res| {

@@ -70,7 +70,8 @@ async fn create_user(
 
     // Do Hash Password with Argon2 Algorithm
     let password = register.password.clone().unwrap();
-    let hashed_password = web::block(move || get_argon2_hasher().hash(password.as_str())).await;
+    let hashed_password =
+        web::block(move || get_argon2_hasher().hash(password.as_str()).unwrap()).await;
 
     if let Err(e) = hashed_password {
         error!("Hash password error: {:?}", e);
@@ -94,7 +95,7 @@ async fn create_user(
             updated_by: "REGISTER".to_string(),
             updated_time_utc: Utc::now().naive_utc(),
         };
-        users_repository::create_user(user, &conn)
+        users_repository::create_user(user, &conn).unwrap()
     })
     .await;
 
@@ -144,11 +145,15 @@ async fn get_all_users(
     .await;
 
     if let Err(e) = result {
+        return ErrResponse::from(e).into();
+    }
+
+    if let Err(e) = result.as_ref().unwrap() {
         error!("Get User error: {:?}", e);
         return ErrResponse::from(e).into();
     }
 
-    let page_response: PageResponse<ResponseUser> = result.unwrap().into();
+    let page_response: PageResponse<ResponseUser> = result.unwrap().unwrap().into();
     info!("Response: {}", page_response);
 
     HttpResponse::Ok().json(Response {
