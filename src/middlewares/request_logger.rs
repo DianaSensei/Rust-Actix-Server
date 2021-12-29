@@ -51,7 +51,10 @@ where
     }
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        info!(" Request --------");
+        let req_uuid = uuid::Uuid::new_v4().as_simple()
+                                           .encode_lower(&mut uuid::Uuid::encode_buffer())
+                                           .to_string();
+        info!("----- Start Request [{}]", req_uuid);
         // info!(
         //     "{:#?}: {:#?}",
         //     header::ACCEPT.as_str(),
@@ -107,8 +110,10 @@ where
             payload.unread_data(body.freeze());
             req.set_payload(payload.into());
 
+            let res = svc.call(req).await?;
+            info!("------- End Request [{}]", req_uuid);
             // Wait for next process
-            Ok(svc.call(req).await?)
+            Ok(res)
         })
     }
 }
