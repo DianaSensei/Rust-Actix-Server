@@ -6,14 +6,19 @@ FROM rust:latest AS base
 
 ENV USER=root
 
+RUN apt-get update && apt-get install libsasl2-dev
+
 WORKDIR /code
 RUN cargo init
 COPY Cargo.toml /code/Cargo.toml
 RUN cargo fetch
 
 COPY src /code/src
+COPY migrations /code/migrations
+COPY locales /code/locales
+COPY build.rs /code/build.rs
 
-CMD [ "cargo", "test", "offline"]
+RUN cargo test
 
 FROM base AS builder
 
