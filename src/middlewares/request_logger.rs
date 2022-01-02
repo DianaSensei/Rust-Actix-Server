@@ -1,4 +1,5 @@
-use actix_web::dev::{MessageBody, Service, Transform};
+use actix_web::body::MessageBody;
+use actix_web::dev::{Service, Transform};
 use actix_web::http::header;
 use actix_web::http::Method;
 use actix_web::web::BytesMut;
@@ -56,13 +57,6 @@ where
             .encode_lower(&mut uuid::Uuid::encode_buffer())
             .to_string();
         info!("----- Start Request [{}]", req_uuid);
-        // info!(
-        //     "{:#?}: {:#?}",
-        //     header::ACCEPT.as_str(),
-        //     req.headers()
-        //         .get(header::ACCEPT)
-        //         .unwrap_or(&header::HeaderValue::from_str("").unwrap())
-        // );
         info!(
             "{:#?}: {:#?}",
             header::USER_AGENT.as_str(),
@@ -71,7 +65,7 @@ where
                 .unwrap_or(&header::HeaderValue::from_str("").unwrap())
         );
 
-        let s = if let Some(peer) = req.connection_info().remote_addr() {
+        let s = if let Some(peer) = req.connection_info().peer_addr() {
             (*peer).to_string()
         } else {
             "-".to_string()
@@ -107,7 +101,7 @@ where
             }
             //
 
-            let mut payload = actix_http::h1::Payload::empty();
+            let (_, mut payload) = actix_http::h1::Payload::create(true);
             payload.unread_data(body.freeze());
             req.set_payload(payload.into());
 

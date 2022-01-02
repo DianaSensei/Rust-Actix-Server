@@ -5,6 +5,8 @@ use once_cell::sync::Lazy;
 #[serde(rename_all = "lowercase")]
 pub struct Config {
     //pub auth_salt: String,
+    pub cargo_pkg_name: String,
+    pub jaeger_url: String,
     pub database_url: String,
     pub redis_url: String,
     pub nats_url: String,

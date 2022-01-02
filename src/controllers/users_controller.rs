@@ -55,6 +55,7 @@ pub fn router() -> Scope {
     // )
 }
 
+#[tracing::instrument]
 async fn create_user(
     register: web::Json<Register>,
     language: web::Query<LanguageRequest>,
@@ -113,6 +114,7 @@ async fn create_user(
     })
 }
 
+#[tracing::instrument]
 async fn get_all_users(
     pagination: web::Query<PageRequest>,
     language: web::Query<LanguageRequest>,

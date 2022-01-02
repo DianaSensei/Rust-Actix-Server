@@ -2,7 +2,9 @@
 name = "backend_rust"
 version = "0.1.0"
 authors = ["thong.nguyen <thong.nguyen@mservice.com.vn>"]
+description = "Rust Actix Web Application"
 edition = "2018"
+repository = "https://github.com/DianaSensei/Rust-Actix-Server"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 #[profile.release]
@@ -15,18 +17,32 @@ edition = "2018"
 ## Disabling debug info speeds up builds a bunch and we don't rely on it for debugging that much.
 #debug = 0
 #split-debuginfo = "unpacked"
+[features]
+debug = []
 
 [dependencies]
 #framework
 actix = "0.12"
-actix-web = "=4.0.0-beta.13"
-actix-http = "=3.0.0-beta.14"
-awc = "=3.0.0-beta.12"
+actix-web = "4.0.0-beta.18"
+actix-http = "3.0.0-beta.17"
+actix-service = "2.0.0-beta.5"
+awc = "3.0.0-beta.17"
 #actix-files = "0.5"
-actix-cors = "=0.6.0-beta.4"
+actix-cors = "0.6.0-beta.8"
 #actix-session = "0.4.1"
 #actix-web-httpauth = "0.5"
 #actix-web-grants = "2.2"
+
+actix-web-opentelemetry = { version = "0.11.0-beta.7", features = ["metrics", "sync-middleware", "awc"] }
+opentelemetry = { version = "0.16", features = ["trace", "metrics", "rt-tokio-current-thread"] }
+opentelemetry-jaeger = { version = "0.15", features = ["rt-tokio-current-thread"] }
+opentelemetry-prometheus = "0.9"
+tracing = "0.1"
+tracing-opentelemetry = "0.16"
+tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
+tracing-bunyan-formatter = "0.3"
+log-mdc = "0.1.0"
+log4rs = { git = "https://github.com/DianaSensei/log4rs", features = ["default", "gzip"] }
 
 #ssl
 openssl = { version = "0.10.38", features = ["v110"] }
