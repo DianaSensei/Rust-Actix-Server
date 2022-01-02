@@ -18,3 +18,4 @@ Cargo.lock
 .vscode/settings.json
 .idea
 /logs
+/archives
