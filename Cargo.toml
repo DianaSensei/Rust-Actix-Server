@@ -23,15 +23,18 @@ debug = []
 [dependencies]
 #framework
 actix = "0.12"
-actix-web = "4.0.0-beta.18"
+actix-web = { version = "4.0.0-beta.18", features = ["rustls"] }
 actix-http = "3.0.0-beta.17"
 actix-service = "2.0.0-beta.5"
 awc = "3.0.0-beta.17"
-#actix-files = "0.5"
+actix-files = "0.6.0-beta.12"
 actix-cors = "0.6.0-beta.8"
 #actix-session = "0.4.1"
 #actix-web-httpauth = "0.5"
 #actix-web-grants = "2.2"
+#tls
+rustls = "0.20"
+rustls-pemfile = "0.2.1"
 
 actix-web-opentelemetry = { version = "0.11.0-beta.7", features = ["metrics", "sync-middleware", "awc"] }
 opentelemetry = { version = "0.16", features = ["trace", "metrics", "rt-tokio-current-thread"] }
@@ -45,7 +48,7 @@ log-mdc = "0.1.0"
 log4rs = { git = "https://github.com/DianaSensei/log4rs", features = ["default", "gzip"] }
 
 #ssl
-openssl = { version = "0.10.38", features = ["v110"] }
+#openssl = { version = "0.10.38", features = ["v110"] }
 listenfd = "0.3"
 #Message broker
 #nats clients
