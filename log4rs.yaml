@@ -4,12 +4,12 @@ appenders:
     kind: console
     encoder:
       kind: pattern
-      pattern: "{d(%F %T%.3f)} {h({l})} [{X(trace_id)},{X(span_id)}] \x1b[1;33m{M}\x1b[0m: {m}{n}"
+      pattern: "{d(%F %T%.3f)} {h({l})} [{X(trace_id)},{X(span_id)}] {s({M})(yellow)(1)}: {m}{n}"
   log_file_rolling:
     kind: rolling_file
-    path: "logs/application.out"
+    path: "logs/application.log"
     encoder:
-      pattern: "{d(%F %T%.3f)} {h({l})} [{X(trace_id)},{X(span_id)}] \x1b[1;33m{M}\x1b[0m: {m}{n}"
+      pattern: "{d(%F %T%.3f)} {h({l})} [{X(trace_id)},{X(span_id)}] {s({M})(yellow)(1)}: {m}{n}"
     policy:
       kind: compound
       trigger:
