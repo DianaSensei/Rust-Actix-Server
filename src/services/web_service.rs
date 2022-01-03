@@ -14,12 +14,12 @@ use actix_web::{
 use actix_web_opentelemetry::{RequestMetrics, RequestTracing};
 use listenfd::ListenFd;
 use opentelemetry::trace::TraceContextExt;
-// use rustls::internal::pemfile::{certs, pkcs8_private_keys};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use rustls::{PrivateKey, Certificate, ServerConfig};
 // use actix_files::Files;
 use std::fs::File;
 use std::io::BufReader;
+use crate::utils::project_profile::{PROFILE, Profile};
 
 #[allow(unused_must_use)]
 pub async fn start_web_service() {
@@ -32,26 +32,6 @@ pub async fn start_web_service() {
         }),
         Some(metrics_exporter),
     );
-
-    // load ssl keys
-    let cert_file = &mut BufReader::new(File::open("./127.0.0.1+1.pem").unwrap());
-    let key_file = &mut BufReader::new(File::open("./127.0.0.1+1-key.pem").unwrap());
-    let cert_chain_byte = certs(cert_file).unwrap();
-    let mut keys_byte = pkcs8_private_keys(key_file).unwrap();
-    if keys_byte.is_empty() {
-        eprintln!("Could not locate PKCS 8 private keys.");
-        std::process::exit(1);
-    }
-    let mut cert_chain= Vec::new();
-    for cert in cert_chain_byte {
-        cert_chain.push(Certificate(cert));
-    }
-
-    let config = ServerConfig::builder()
-        .with_safe_defaults()
-        .with_no_client_auth()
-        .with_single_cert(cert_chain, PrivateKey(keys_byte.remove(0)))
-        .expect("bad certificate/key");
 
     let mut server = HttpServer::new(move || {
         App::new()
@@ -94,10 +74,18 @@ pub async fn start_web_service() {
             .default_service(web::route().to(HttpResponse::NotFound))
     });
 
-    server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
-        Some(listener) => server.listen_rustls(listener, config).unwrap(),
-        None => server.bind_rustls(&config::CONFIG.server, config).unwrap(),
-    };
+    if PROFILE.eq(&Profile::DEVELOPMENT) {
+        server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
+            Some(listener) => server.listen(listener).unwrap(),
+            None => server.bind(&config::CONFIG.server).unwrap(),
+        };
+    } else {
+        let config = load_tls_config();
+        server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
+            Some(listener) => server.listen_rustls(listener, config).unwrap(),
+            None => server.bind_rustls(&config::CONFIG.server, config).unwrap(),
+        };
+    }
 
     let _ = server.run().await;
     // Ensure all spans have been shipped to Jaeger.
@@ -137,4 +125,25 @@ fn json_error_handler(err: error::JsonPayloadError, _req: &HttpRequest) -> error
 fn default_error_handler<B>(res: ServiceResponse<B>) -> actix_web::Result<ErrorHandlerResponse<B>> {
     error!("Default ErrorHandlers detected!");
     Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
+}
+
+fn load_tls_config() -> ServerConfig {
+    let cert_file = &mut BufReader::new(File::open("./127.0.0.1+1.pem").unwrap());
+    let key_file = &mut BufReader::new(File::open("./127.0.0.1+1-key.pem").unwrap());
+    let cert_chain_byte = certs(cert_file).unwrap();
+    let mut keys_byte = pkcs8_private_keys(key_file).unwrap();
+    if keys_byte.is_empty() {
+        eprintln!("Could not locate PKCS 8 private keys.");
+        std::process::exit(1);
+    }
+    let mut cert_chain= Vec::new();
+    for cert in cert_chain_byte {
+        cert_chain.push(Certificate(cert));
+    }
+
+    ServerConfig::builder()
+        .with_safe_defaults()
+        .with_no_client_auth()
+        .with_single_cert(cert_chain, PrivateKey(keys_byte.remove(0)))
+        .expect("bad certificate/key")
 }

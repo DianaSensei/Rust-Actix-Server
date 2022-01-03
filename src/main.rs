@@ -51,6 +51,8 @@ async fn main() {
 }
 
 fn log_credits() {
+    use crate::utils::project_profile::get_profile;
+
     info!("-------- START CREDITS ------------");
     info!("Author: {}", env!("CARGO_PKG_AUTHORS"));
     info!("App Name: {}", env!("CARGO_PKG_NAME"));
@@ -58,6 +60,7 @@ fn log_credits() {
     info!("Description: {}", env!("CARGO_PKG_DESCRIPTION"));
     info!("Repository: {}", env!("CARGO_PKG_REPOSITORY"));
     info!("App Version: {}", env!("CARGO_PKG_VERSION"));
+    info!("Environment Profile: {}", get_profile().to_string());
     info!("-------- END CREDITS --------------");
 }
 
@@ -65,13 +68,11 @@ fn log_config() {
     // use env_logger::fmt::Color;
     // use std::io::Write;
     dotenv::dotenv().ok();
-
     std::env::set_var(
         "RUST_LOG",
         "trace, actix_web=info,actix_server=info,actix_http=info",
     );
     std::env::set_var("RUST_LOG_STYLE", "always");
-    std::env::set_var("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "102400");
     std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
 
     // tracing_log::LogTracer::init().expect("Failed to set logger");
