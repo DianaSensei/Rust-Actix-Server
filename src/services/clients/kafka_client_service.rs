@@ -3,7 +3,7 @@ use rdkafka::producer::{FutureProducer, FutureRecord};
 use rdkafka::ClientConfig;
 use std::time::Duration;
 
-use crate::config;
+use crate::settings;
 
 static KAFKA_CONNECTION: OnceCell<FutureProducer> = OnceCell::new();
 static KAFKA_CONNECTION_INITIALIZED: OnceCell<tokio::sync::Mutex<bool>> = OnceCell::new();
@@ -21,11 +21,11 @@ pub async fn get_kafka_connection() -> Option<&'static FutureProducer> {
         if let Ok(conn) = ClientConfig::new()
             .set(
                 "bootstrap.servers",
-                config::CONFIG.kafka_broker_url.as_str(),
+                &settings::SETTINGS.message_broker.kafka.url,
             )
             .set(
                 "message.timeout.ms",
-                config::CONFIG.kafka_message_timeout.as_str(),
+                &settings::SETTINGS.message_broker.kafka.message_timeout,
             )
             .create()
         {

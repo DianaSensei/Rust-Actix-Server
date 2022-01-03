@@ -56,6 +56,7 @@ pub fn router() -> Scope {
 }
 
 #[tracing::instrument]
+#[allow(clippy::async_yields_async)]
 async fn create_user(
     register: web::Json<Register>,
     language: web::Query<LanguageRequest>,
@@ -115,6 +116,7 @@ async fn create_user(
 }
 
 #[tracing::instrument]
+#[allow(clippy::async_yields_async)]
 async fn get_all_users(
     pagination: web::Query<PageRequest>,
     language: web::Query<LanguageRequest>,

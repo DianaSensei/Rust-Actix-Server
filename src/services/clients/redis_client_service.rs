@@ -1,4 +1,4 @@
-use crate::config;
+use crate::settings;
 use once_cell::sync::OnceCell;
 use redis::aio::ConnectionManager;
 
@@ -14,7 +14,7 @@ pub async fn get_redis_connection() -> Option<&'static ConnectionManager> {
         REDIS_CLIENT_INITIALIZED.get_or_init(|| tokio::sync::Mutex::new(false));
     let mut initialized = initializing_mutex.lock().await;
     if !*initialized {
-        if let Ok(client) = redis::Client::open(config::CONFIG.redis_url.as_str()) {
+        if let Ok(client) = redis::Client::open(settings::SETTINGS.datasource.redis.url.as_str()) {
             if let Ok(conn) = client.get_tokio_connection_manager().await {
                 if REDIS_CLIENT.set(conn).is_ok() {
                     info!("REDIS CLIENT INITIATE: [SUCCESS]");

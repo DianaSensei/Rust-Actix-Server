@@ -13,6 +13,8 @@ extern crate diesel_migrations;
 #[macro_use]
 extern crate strum;
 
+use crate::settings::SETTINGS;
+
 #[allow(dead_code)]
 mod config;
 #[allow(dead_code)]
@@ -26,13 +28,18 @@ mod repositories;
 #[allow(dead_code)]
 mod services;
 #[allow(dead_code)]
+mod settings;
+#[allow(dead_code)]
 mod utils;
 
 #[actix_web::main]
 async fn main() {
+    println!("{}", SETTINGS.cargo_pkg_name);
+    // println!("{}", SETTINGS.datasource.redis.url);
     log_config();
     init_telemetry();
     log_credits();
+
     // Create clients connections
     // services::clients::get_kafka_connection().await;
     // services::clients::get_nats_connection().await;
@@ -137,8 +144,8 @@ fn init_telemetry() {
 
     opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
     let tracer = opentelemetry_jaeger::new_pipeline()
-        .with_agent_endpoint(&config::CONFIG.jaeger_url)
-        .with_service_name(&config::CONFIG.cargo_pkg_name)
+        .with_agent_endpoint(&SETTINGS.tracer.jaeger.url)
+        .with_service_name(&SETTINGS.cargo_pkg_name)
         .install_batch(opentelemetry::runtime::TokioCurrentThread)
         .expect("Failed to install OpenTelemetry tracer.");
     // Initialize `tracing` using `opentelemetry-tracing` and configure logging

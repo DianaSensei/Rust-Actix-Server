@@ -1,4 +1,4 @@
-use crate::config;
+use crate::SETTINGS;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::transport::smtp::response::Response;
 use lettre::transport::smtp::SmtpTransport;
@@ -17,9 +17,9 @@ pub async fn get_smtp_connection() -> Option<&'static SmtpTransport> {
         SMTP_CONNECTION_INITIALIZED.get_or_init(|| tokio::sync::Mutex::new(false));
     let mut initialized = initializing_mutex.lock().await;
 
-    let smtp_host = &*config::CONFIG.smtp_host;
-    let smtp_username = config::CONFIG.smtp_username.clone();
-    let smtp_password = (config::CONFIG).smtp_password.clone();
+    let smtp_host = &SETTINGS.mail.host;
+    let smtp_username = SETTINGS.mail.username.clone();
+    let smtp_password = SETTINGS.mail.password.clone();
 
     if !*initialized {
         if let Ok(conn_builder) = SmtpTransport::starttls_relay(smtp_host) {

@@ -1,6 +1,6 @@
-use crate::config;
 use crate::controllers;
 use crate::middlewares;
+use crate::settings;
 use actix_cors::Cors;
 use actix_web::dev::Service;
 use actix_web::dev::ServiceResponse;
@@ -14,19 +14,19 @@ use actix_web::{
 use actix_web_opentelemetry::{RequestMetrics, RequestTracing};
 use listenfd::ListenFd;
 use opentelemetry::trace::TraceContextExt;
+use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
-use rustls::{PrivateKey, Certificate, ServerConfig};
 // use actix_files::Files;
+use crate::utils::project_profile::{Profile, PROFILE};
 use std::fs::File;
 use std::io::BufReader;
-use crate::utils::project_profile::{PROFILE, Profile};
 
 #[allow(unused_must_use)]
 pub async fn start_web_service() {
     // Start an (optional) otel prometheus metrics pipeline
     let metrics_exporter = opentelemetry_prometheus::exporter().init();
     let request_metrics = RequestMetrics::new(
-        opentelemetry::global::meter(&config::CONFIG.cargo_pkg_name),
+        opentelemetry::global::meter("backend"),
         Some(|req: &actix_web::dev::ServiceRequest| {
             req.path() == "/metrics" && req.method() == actix_web::http::Method::GET
         }),
@@ -77,13 +77,15 @@ pub async fn start_web_service() {
     if PROFILE.eq(&Profile::DEVELOPMENT) {
         server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
             Some(listener) => server.listen(listener).unwrap(),
-            None => server.bind(&config::CONFIG.server).unwrap(),
+            None => server.bind(&settings::SETTINGS.server.listen_url).unwrap(),
         };
     } else {
         let config = load_tls_config();
         server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
             Some(listener) => server.listen_rustls(listener, config).unwrap(),
-            None => server.bind_rustls(&config::CONFIG.server, config).unwrap(),
+            None => server
+                .bind_rustls(&settings::SETTINGS.server.listen_url, config)
+                .unwrap(),
         };
     }
 
@@ -136,7 +138,7 @@ fn load_tls_config() -> ServerConfig {
         eprintln!("Could not locate PKCS 8 private keys.");
         std::process::exit(1);
     }
-    let mut cert_chain= Vec::new();
+    let mut cert_chain = Vec::new();
     for cert in cert_chain_byte {
         cert_chain.push(Certificate(cert));
     }

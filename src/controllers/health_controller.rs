@@ -6,6 +6,7 @@ pub fn router() -> Scope {
 }
 
 #[tracing::instrument]
+#[allow(clippy::async_yields_async)]
 async fn get_health() -> HttpResponse {
     HttpResponse::Ok().json(HealthResponse {
         status: "Ok".to_owned(),

@@ -1,0 +1,39 @@
+[server]
+listen_port = "3000"
+listen_url = "0.0.0.0:3000"
+
+[tracer.jaeger]
+url = "127.0.0.1:6831"
+
+[datasource.database]
+url = "postgres://postgres:postgres@localhost/postgres"
+
+[datasource.redis]
+url = "redis://127.0.0.1/"
+
+[message_broker.nats]
+url = "nats://127.0.0.1:4222"
+
+[message_broker.kafka]
+url = "127.0.0.1:9092"
+message_timeout = 5000
+
+[mail]
+username = "ndthong144.email@gmail.com"
+password = "zvzaiqvhgkpekezh"
+host = "smtp.gmail.com"
+port = 587
+
+[log]
+level = "info"
+
+[[rules]]
+name = "all"
+rule_set = [
+    ">5",
+    "<100",
+]
+
+[[rules]]
+name = "none"
+rule_set = []
