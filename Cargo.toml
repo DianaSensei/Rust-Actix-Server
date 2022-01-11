@@ -40,12 +40,13 @@ actix-web-opentelemetry = { version = "0.11.0-beta.7", features = ["metrics", "s
 opentelemetry = { version = "0.16", features = ["trace", "metrics", "rt-tokio-current-thread"] }
 opentelemetry-jaeger = { version = "0.15", features = ["rt-tokio-current-thread"] }
 opentelemetry-prometheus = "0.9"
-tracing = "0.1"
+tracing = "0.1.29"
+tracing-appender = "0.2"
 tracing-opentelemetry = "0.16"
-tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["registry", "env-filter", "local-time"] }
 tracing-bunyan-formatter = "0.3"
-log-mdc = "0.1.0"
-log4rs = { git = "https://github.com/DianaSensei/log4rs", features = ["default", "gzip"] }
+#log-mdc = "0.1.0"
+#log4rs = { git = "https://github.com/DianaSensei/log4rs", features = ["default", "gzip"] }
 
 #ssl
 #openssl = { version = "0.10.38", features = ["v110"] }

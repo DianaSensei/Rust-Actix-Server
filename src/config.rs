@@ -1,8 +1,8 @@
-use once_cell::sync::Lazy;
-
-#[derive(Clone, Deserialize, Debug)]
-#[serde(rename_all = "lowercase")]
-pub struct Config {
+// use once_cell::sync::Lazy;
+//
+// #[derive(Clone, Deserialize, Debug)]
+// #[serde(rename_all = "lowercase")]
+// pub struct Config {
     //pub auth_salt: String,
 // pub cargo_pkg_name: String,
 // pub jaeger_url: String,
@@ -30,15 +30,15 @@ pub struct Config {
 //pub session_name:String,
 //pub session_secure: bool,
 //pub session_timeout: i64
-}
-
-pub static CONFIG: Lazy<Config> = Lazy::new(get_config);
-
-fn get_config() -> Config {
-    dotenv::dotenv().ok();
-
-    match envy::from_env::<Config>() {
-        Ok(config) => config,
-        Err(error) => panic!("Configuration Error: {:#?}", error),
-    }
-}
+// }
+//
+// pub static CONFIG: Lazy<Config> = Lazy::new(get_config);
+//
+// fn get_config() -> Config {
+//     dotenv::dotenv().ok();
+//
+//     match envy::from_env::<Config>() {
+//         Ok(config) => config,
+//         Err(error) => panic!("Configuration Error: {:#?}", error),
+//     }
+// }

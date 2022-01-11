@@ -55,7 +55,7 @@ pub fn router() -> Scope {
     // )
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(register))]
 #[allow(clippy::async_yields_async)]
 async fn create_user(
     register: web::Json<Register>,
@@ -65,6 +65,7 @@ async fn create_user(
     if let Err(e) = register.validate() {
         return ErrResponse::from(e).into();
     }
+    tracing::event!(tracing::Level::INFO, "Hello");
 
     // Detect Language Mapper
     let lang = Lang::from_language_id(&LanguageId::new(language.value.as_str()))

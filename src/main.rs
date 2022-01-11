@@ -5,7 +5,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate validator_derive;
 #[macro_use]
-extern crate log;
+extern crate tracing;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
@@ -34,19 +34,16 @@ mod utils;
 
 #[actix_web::main]
 async fn main() {
-    println!("{}", SETTINGS.cargo_pkg_name);
-    // println!("{}", SETTINGS.datasource.redis.url);
     log_config();
-    init_telemetry();
     log_credits();
 
     // Create clients connections
-    // services::clients::get_kafka_connection().await;
-    // services::clients::get_nats_connection().await;
-    // services::clients::get_redis_connection().await;
-    // services::clients::get_smtp_connection().await;
+    services::clients::get_kafka_connection().await;
+    services::clients::get_nats_connection().await;
+    services::clients::get_redis_connection().await;
+    services::clients::get_smtp_connection().await;
 
-    // utils::hasher::get_argon2_hasher();
+    utils::hasher::get_argon2_hasher();
     // Create Database connection and run migration
     services::clients::postgres_client_service::init_and_run_migration();
 
@@ -72,8 +69,6 @@ fn log_credits() {
 }
 
 fn log_config() {
-    // use env_logger::fmt::Color;
-    // use std::io::Write;
     dotenv::dotenv().ok();
     std::env::set_var(
         "RUST_LOG",
@@ -82,65 +77,10 @@ fn log_config() {
     std::env::set_var("RUST_LOG_STYLE", "always");
     std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
 
-    // tracing_log::LogTracer::init().expect("Failed to set logger");
-
-    log4rs::init_file("./log4rs.yaml", Default::default()).unwrap();
-
-    // env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
-    //     .format(|buf, record| {
-    //         // Format Module
-    //         let module_split = record.module_path().unwrap().split("::");
-    //         let count = module_split.clone().count();
-    //         let mut module_short = String::new();
-    //         `for (pos, module) in module_split.enumerate() {
-    //             if pos == count - 1 {
-    //                 module_short.push_str(module);
-    //             } else {
-    //                 module_short.push(module.chars().next().unwrap());
-    //                 module_short.push_str("::");
-    //             }
-    //         }`
-    //         let mut module_style = buf.style();
-    //         module_style.set_color(Color::Magenta);
-    //
-    //         // Format Local TimeStamp
-    //         let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-    //
-    //         // Format Log Level
-    //         let mut level_style = buf.default_level_style(record.level());
-    //         level_style.set_bold(true).set_intense(true);
-    //
-    //         let ctx = opentelemetry::Context::current();
-    //         let trace_id = match ctx.span().span_context().trace_id() == TraceId::invalid() {
-    //             false => ctx.span().span_context().trace_id().to_hex(),
-    //             true => "                                ".to_string()
-    //         };
-    //         let span_id = match ctx.span().span_context().span_id() == SpanId::invalid() {
-    //             false => ctx.span().span_context().span_id().to_hex(),
-    //             true => "                ".to_string()
-    //         };
-    //
-    //         // Write Log Format
-    //         writeln!(
-    //             buf,
-    //             "{} {} [{} - {}][{}]: {}",
-    //             timestamp,
-    //             level_style.value(record.level()),
-    //             trace_id,
-    //             span_id,
-    //             module_style.value(module_short),
-    //             record.args()
-    //         )
-    //     })
-    //     .init();
-}
-
-/// Init a `tracing` subscriber that prints spans to stdout as well as
-/// ships them to Jaeger.
-fn init_telemetry() {
     use opentelemetry::sdk::propagation::TraceContextPropagator;
     use tracing_subscriber::layer::SubscriberExt;
-    use tracing_subscriber::Registry;
+    use tracing_subscriber::util::SubscriberInitExt;
+    use tracing_subscriber::fmt::writer::MakeWriterExt;
 
     opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
     let tracer = opentelemetry_jaeger::new_pipeline()
@@ -148,11 +88,23 @@ fn init_telemetry() {
         .with_service_name(&SETTINGS.cargo_pkg_name)
         .install_batch(opentelemetry::runtime::TokioCurrentThread)
         .expect("Failed to install OpenTelemetry tracer.");
-    // Initialize `tracing` using `opentelemetry-tracing` and configure logging
-    let registry = Registry::default()
-        // Jeager Layer
-        .with(tracing_opentelemetry::layer().with_tracer(tracer))
-        .with(tracing_bunyan_formatter::JsonStorageLayer);
 
-    tracing::subscriber::set_global_default(registry).expect("Unable to install global subscriber");
+    let console = tracing_subscriber::fmt::layer()
+        .compact()
+        .with_writer(std::io::stdout.with_max_level(tracing::Level::DEBUG))
+        .with_ansi(true);
+
+    let file_appender = tracing_appender::rolling::never("./logs", "app.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    let roll = tracing_subscriber::fmt::layer()
+        .compact()
+        .with_writer(non_blocking)
+        .with_ansi(true);
+
+    tracing_subscriber::registry()
+        .with(console)
+        .with(roll)
+        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .with(tracing_bunyan_formatter::JsonStorageLayer)
+        .try_init().expect("Unable to install global subscriber");
 }
