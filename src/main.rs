@@ -127,7 +127,7 @@ fn log_config() {
                     module_short.push_str(module);
                 } else {
                     module_short.push(module.chars().next().unwrap());
-                    module_short.push_str(".");
+                    module_short.push_str("::");
                 }
             }
             let mut module_style = writer.style();

@@ -1,4 +1,4 @@
-use crate::SETTINGS;
+use crate::settings::SETTINGS;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::transport::smtp::response::Response;
 use lettre::transport::smtp::SmtpTransport;
