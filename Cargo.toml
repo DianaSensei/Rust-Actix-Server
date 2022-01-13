@@ -41,12 +41,11 @@ opentelemetry = { version = "0.16", features = ["trace", "metrics", "rt-tokio-cu
 opentelemetry-jaeger = { version = "0.15", features = ["rt-tokio-current-thread"] }
 opentelemetry-prometheus = "0.9"
 tracing = "0.1.29"
+tracing-log = { version = "0.1", features = ["env_logger"] }
 tracing-appender = "0.2"
 tracing-opentelemetry = "0.16"
-tracing-subscriber = { version = "0.3", features = ["registry", "env-filter", "local-time"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["smallvec", "registry", "env-filter", "local-time", "fmt", "ansi", "std"] }
 tracing-bunyan-formatter = "0.3"
-#log-mdc = "0.1.0"
-#log4rs = { git = "https://github.com/DianaSensei/log4rs", features = ["default", "gzip"] }
 
 #ssl
 #openssl = { version = "0.10.38", features = ["v110"] }
@@ -98,7 +97,7 @@ once_cell = "1.5"
 # url = "2.1"
 #reqwest = "0.11"
 #Configuration Mapper
-envy = "0.4"
+#envy = "0.4"
 #Logger customizer
 log = "0.4"
 dotenv = "0.15"

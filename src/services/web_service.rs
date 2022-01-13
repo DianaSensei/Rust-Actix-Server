@@ -1,8 +1,8 @@
 use crate::controllers;
 use crate::middlewares;
 use crate::settings;
+use crate::utils::project_profile::{Profile, PROFILE};
 use actix_cors::Cors;
-// use actix_web::dev::Service;
 use actix_web::dev::ServiceResponse;
 use actix_web::web::Data;
 use actix_web::{
@@ -13,11 +13,8 @@ use actix_web::{
 };
 use actix_web_opentelemetry::{RequestMetrics, RequestTracing};
 use listenfd::ListenFd;
-// use opentelemetry::trace::TraceContextExt;
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
-// use actix_files::Files;
-use crate::utils::project_profile::{Profile, PROFILE};
 use std::fs::File;
 use std::io::BufReader;
 
@@ -46,22 +43,6 @@ pub async fn start_web_service() {
             .wrap(middlewares::LoggingRequestMiddleware)
             // Metric Prometheus
             .wrap(request_metrics.clone())
-            // // MDC decorator
-            // .wrap_fn(|request, srv| {
-            //     let ctx = opentelemetry::Context::current();
-            //     if ctx.span().span_context().trace_id() != opentelemetry::trace::TraceId::invalid()
-            //     {
-            //         log_mdc::insert("trace_id", ctx.span().span_context().trace_id().to_hex());
-            //     };
-            //     if ctx.span().span_context().span_id() != opentelemetry::trace::SpanId::invalid() {
-            //         log_mdc::insert("span_id", ctx.span().span_context().span_id().to_hex());
-            //     };
-            //     actix_web::web::block(move || {
-            //         log_mdc::insert("trace_id", ctx.span().span_context().trace_id().to_hex());
-            //         log_mdc::insert("span_id", ctx.span().span_context().span_id().to_hex());
-            //     });
-            //     srv.call(request)
-            // })
             // Tracing Jeager
             .wrap(RequestTracing::new())
             // Cors Config

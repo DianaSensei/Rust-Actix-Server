@@ -52,11 +52,13 @@ where
     }
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
+        let req_start = chrono::Local::now();
         let req_uuid = uuid::Uuid::new_v4()
             .as_simple()
             .encode_lower(&mut uuid::Uuid::encode_buffer())
             .to_string();
         info!("----- Start Request [{}]", req_uuid);
+
         info!(
             "{:#?}: {:#?}",
             header::USER_AGENT.as_str(),
@@ -71,6 +73,7 @@ where
             "-".to_string()
         };
         info!("{:#?}: {:#?}", header::FROM.as_str(), s);
+
         if req.headers().get(header::AUTHORIZATION).is_some() {
             info!(
                 "{:#?}: \"****************************\"",
@@ -99,14 +102,17 @@ where
                 let json: serde_json::Value = serde_json::from_slice(&*body).unwrap();
                 info!("\"body\": {}", json);
             }
-            //
 
             let (_, mut payload) = actix_http::h1::Payload::create(true);
             payload.unread_data(body.freeze());
             req.set_payload(payload.into());
 
             let res = svc.call(req).await?;
-            info!("------- End Request [{}]", req_uuid);
+            info!(
+                "------- End Request [{}] in `{}ms`",
+                req_uuid,
+                (chrono::Local::now() - req_start).num_milliseconds()
+            );
             // Wait for next process
             Ok(res)
         })
