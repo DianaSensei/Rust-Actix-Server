@@ -99,19 +99,9 @@ fn log_config() {
 
             // Decorate Span info
             let ctx = opentelemetry::Context::current();
-            let trace_id = match ctx.span().span_context().trace_id()
-                == opentelemetry::trace::TraceId::invalid()
-            {
-                false => ctx.span().span_context().trace_id().to_hex(),
-                true => "".to_string(),
-            };
-            let span_id = match ctx.span().span_context().span_id()
-                == opentelemetry::trace::SpanId::invalid()
-            {
-                false => ctx.span().span_context().span_id().to_hex(),
-                true => "".to_string(),
-            };
-            write!(writer, " [{},{}]", trace_id, span_id)?;
+            let trace_id = ctx.span().span_context().trace_id();
+            let span_id = ctx.span().span_context().span_id();
+            write!(writer, " [{:x},{:x}]", trace_id, span_id)?;
 
             // Format target
             let mut target_style = writer.style();

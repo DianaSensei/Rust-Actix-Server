@@ -98,19 +98,14 @@ pub static SETTINGS: Lazy<Settings> = Lazy::new(|| Settings::new().expect("confi
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
         let env = get_profile().to_string().to_lowercase();
-        let mut s = Config::new();
-        s.set_default(
-            "hasher.scheme_version",
-            default_hasher_scheme_version().to_string(),
-        )?;
+        let s = Config::builder()
+            .set_default("hasher.scheme_version",
+                         default_hasher_scheme_version().to_string())?
+            .add_source(File::with_name(CONFIG_FILE_PATH))
+            .add_source(File::with_name(&format!("{}{}", CONFIG_FOLDER_PATH, env)))
+            .add_source(Environment::default())
+            .build()?;
 
-        s.merge(File::with_name(CONFIG_FILE_PATH))?;
-        s.merge(File::with_name(&format!("{}{}", CONFIG_FOLDER_PATH, env)))?;
-
-        // This makes it so "EA_SERVER__PORT overrides server.port
-        s.merge(Environment::default())?;
-        // s.merge(Environment::with_prefix("APP").separator("__"))?;
-
-        s.try_into()
+        s.try_deserialize()
     }
 }
