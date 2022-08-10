@@ -13,6 +13,11 @@ extern crate diesel_migrations;
 #[macro_use]
 extern crate strum;
 
+use opentelemetry::trace::TraceContextExt;
+use tracing_subscriber::fmt::{FmtContext, FormatEvent, FormatFields, FormattedFields};
+use tracing_subscriber::fmt::format::Writer;
+use tracing_subscriber::registry::LookupSpan;
+
 #[allow(dead_code)]
 mod controllers;
 #[allow(dead_code)]
@@ -30,7 +35,10 @@ mod utils;
 
 #[actix_web::main]
 async fn main() {
-    log_config();
+    let file_appender = tracing_appender::rolling::never("./logs", "app.log");
+    let (non_blocking_file, _guard_file) = tracing_appender::non_blocking(file_appender);
+
+    log_config(non_blocking_file);
     log_credits();
 
     // Create clients connections
@@ -64,70 +72,20 @@ fn log_credits() {
     info!("-------- END CREDITS --------------");
 }
 
-fn log_config() {
+fn log_config(nonblocking_file: tracing_appender::non_blocking::NonBlocking) {
     use crate::settings::SETTINGS;
-    use env_logger::fmt::Color;
-    use log::Level;
     use opentelemetry::sdk::propagation::TraceContextPropagator;
-    use opentelemetry::trace::TraceContextExt;
-    use std::io::Write;
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::util::SubscriberInitExt;
 
     dotenv::dotenv().ok();
+
     // std::env::set_var(
     //     "RUST_LOG",
-    //     "info, actix_web=info,actix_server=info,actix_http=info",
+    //     "debug, actix_web=debug,actix_server=debug,actix_http=info",
     // );
     std::env::set_var("RUST_LOG_STYLE", "always");
     std::env::set_var("RUST_BACKTRACE", "full"); // debug verbose mode
-
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
-        .format(|writer, record| {
-            // Format Local TimeStamp
-            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-            write!(writer, "{}", timestamp)?;
-
-            // Format Log Level
-            let mut level_style = writer.default_level_style(record.level());
-            level_style.set_bold(true);
-            let level = match record.level() {
-                Level::Warn | Level::Info => record.level().as_str().to_owned() + " ",
-                _ => record.level().to_string(),
-            };
-            write!(writer, " {}", level_style.value(level))?;
-
-            // Decorate Span info
-            let ctx = opentelemetry::Context::current();
-            let trace_id = ctx.span().span_context().trace_id();
-            let span_id = ctx.span().span_context().span_id();
-            write!(writer, " [{:x},{:x}]", trace_id, span_id)?;
-
-            // Format target
-            let mut target_style = writer.style();
-            target_style.set_color(Color::Blue).set_bold(true);
-            write!(writer, " [{}]", target_style.value(record.target()))?;
-
-            // Format Module
-            let module_split = record.module_path().unwrap().split("::");
-            let count = module_split.clone().count();
-            let mut module_short = String::new();
-            for (pos, module) in module_split.enumerate() {
-                if pos == count - 1 {
-                    module_short.push_str(module);
-                } else {
-                    module_short.push(module.chars().next().unwrap());
-                    module_short.push_str("::");
-                }
-            }
-            let mut module_style = writer.style();
-            module_style.set_color(Color::Yellow).set_bold(true);
-            write!(writer, " {}", module_style.value(module_short))?;
-
-            write!(writer, ": {}", record.args())?;
-            writeln!(writer)
-        })
-        .init();
 
     opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
     let tracer = opentelemetry_jaeger::new_pipeline()
@@ -136,17 +94,157 @@ fn log_config() {
         .install_batch(opentelemetry::runtime::TokioCurrentThread)
         .expect("Failed to install OpenTelemetry tracer.");
 
-    let file_appender = tracing_appender::rolling::never("./logs", "app.log");
-    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     let roll = tracing_subscriber::fmt::layer()
-        .compact()
-        .with_writer(non_blocking)
-        .with_ansi(true);
+        .event_format(TLog::new())
+        .with_writer(nonblocking_file);
+
+    let fmt = tracing_subscriber::fmt::layer()
+        .event_format(TLog::new());
+
+    let log_level = tracing_subscriber::EnvFilter::new(
+        std::env::var("RUST_LOG").unwrap_or_else(|_| "info, actix_web=info,actix_server=info,actix_http=info".into()),
+    );
 
     tracing_subscriber::registry()
+        .with(log_level)
         .with(roll)
+        .with(fmt)
         .with(tracing_opentelemetry::layer().with_tracer(tracer))
         .with(tracing_bunyan_formatter::JsonStorageLayer)
         .try_init()
         .expect("Unable to install global subscriber");
+}
+
+#[derive(Debug)]
+pub struct TLog;
+
+impl TLog {
+    fn new() -> Self {
+        TLog {}
+    }
+}
+
+impl<S, N> FormatEvent<S, N> for TLog
+    where
+        S: tracing::Subscriber + for<'a> LookupSpan<'a>,
+        N: for<'a> FormatFields<'a> + 'static,
+{
+    fn format_event(
+        &self,
+        ctx: &FmtContext<'_, S, N>,
+        mut writer: Writer<'_>,
+        event: &tracing::Event<'_>,
+    ) -> std::fmt::Result {
+
+        let timestamp = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f");
+        write!(writer, "{}", timestamp)?;
+
+        let level = event.metadata().level();
+        // Format Log Level
+        match *level {
+            tracing::Level::TRACE => write!(writer, " {}", ansi_term::Colour::Purple.bold().paint(level.as_str())),
+            tracing::Level::DEBUG => write!(writer, " {}", ansi_term::Colour::Blue.bold().paint(level.as_str())),
+            tracing::Level::INFO => write!(writer, " {}", ansi_term::Colour::Green.bold().paint(level.as_str())),
+            tracing::Level::WARN => write!(writer, " {}", ansi_term::Colour::Yellow.bold().paint(level.as_str())),
+            tracing::Level::ERROR => write!(writer, " {}", ansi_term::Colour::Red.bold().paint(level.as_str())),
+        }?;
+
+        // Decorate Span info
+        let ctx1 = opentelemetry::Context::current();
+        let trace_id = ctx1.span().span_context().trace_id();
+        let span_id = ctx1.span().span_context().span_id();
+        write!(writer, " [{:x},{:x}]", trace_id, span_id)?;
+
+        // get some process information
+        let pid = std::process::id();
+        let thread = std::thread::current();
+        let thread_name_op = thread.name();
+        match thread_name_op {
+            None => {
+                write!(writer, " [{}, ]", pid)?;
+            }
+            Some(thread_name) => {
+                write!(writer, " [{},{:?}]", pid, thread_name)?;
+            }
+        }
+
+
+        // Format target
+        let target = event..target();
+        write!(writer, " [{}]", ansi_term::Colour::Blue.bold().paint(target))?;
+
+        // Format Module
+        let module = event.metadata().module_path();
+        match module {
+            None => {
+                write!(writer, " []: ")?;
+            }
+            Some(modules) => {
+              let module_split = modules.split("::");
+                let count = module_split.clone().count();
+                let mut module_short = String::new();
+                for (pos, module) in module_split.enumerate() {
+                    if pos == count - 1 {
+                        module_short.push_str(module);
+                    } else {
+                        module_short.push(module.chars().next().unwrap());
+                        module_short.push_str("::");
+                    }
+                }
+
+                write!(writer, " {}: ", ansi_term::Colour::Yellow.bold().paint(module_short))?;
+            }
+        }
+
+
+        ctx.field_format().format_fields(writer.by_ref(), event)?;
+
+        //     // now, we're printing the span context into brackets of `[]`, which glog parsers ignore.
+        let leaf = ctx.lookup_current();
+
+        if let Some(leaf) = leaf {
+            // write the opening brackets
+            write!(writer, "[")?;
+
+            // Write spans and fields of each span
+            let mut iter = leaf.scope().from_root();
+            let mut span = iter.next().expect(
+                "Unable to get the next item in the iterator; this should not be possible.",
+            );
+            loop {
+                let ext = span.extensions();
+                let fields = &ext
+                    .get::<FormattedFields<N>>()
+                    .expect("will never be `None`");
+
+                let fields = if !fields.is_empty() {
+                    Some(fields.as_str())
+                } else {
+                    None
+                };
+
+
+                let bold = ansi_term::Style::new().bold();
+                write!(writer, " {} ", bold.paint(span.name()))?;
+                let italic = ansi_term::Style::new().italic();
+                if let Some(fields) = fields {
+                    write!(writer, " {{{}}} ", italic.paint(fields))?;
+                };
+
+                drop(ext);
+                match iter.next() {
+                    // if there's more, add a space.
+                    Some(next) => {
+                        write!(writer, ", ")?;
+                        span = next;
+                    }
+                    // if there's nothing there, close.
+                    None => break,
+                }
+            }
+            write!(writer, "] ")?;
+        }
+
+        writeln!(writer)
+    }
 }
