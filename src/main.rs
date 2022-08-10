@@ -170,7 +170,7 @@ impl<S, N> FormatEvent<S, N> for TLog
 
 
         // Format target
-        let target = event..target();
+        let target = event.metadata().target();
         write!(writer, " [{}]", ansi_term::Colour::Blue.bold().paint(target))?;
 
         // Format Module
