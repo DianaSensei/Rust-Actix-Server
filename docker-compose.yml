@@ -107,6 +107,31 @@ services:
       - "14268:14268"
       - "9411:9411"
 
+  minio:
+    image: minio/minio
+    restart: always
+    volumes:
+      - .docker/minio:/minio/storage
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: "minio"
+      MINIO_ROOT_PASSWORD: "1234@123"
+    command: server /minio/storage --console-address :9001
+
+  minio-bucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add minio-host http://minio:9000 minio 1234@123;
+      /usr/bin/mc mb minio-host/file-storage;
+      /usr/bin/mc policy download minio-host/file-storage;
+      exit 0;
+      "
+
 # configs:
 #   my_config:
 #     file: ./my_config.txt
