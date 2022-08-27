@@ -50,13 +50,6 @@ tracing-subscriber = { version = "0.3.15", default-features = false, features = 
 tracing-bunyan-formatter = "0.3.3"
 #tracing-actix-web = { version = "0.6.0", default-features = false, features = [ "opentelemetry_0_17"]}
 #tracing-awc = { version = "0.1.5", default-features = false, features = ["opentelemetry_0_17"]}
-=======
-tracing = "0.1.35"
-tracing-log = { version = "0.1.3", features = ["env_logger"] }
-tracing-appender = "0.2.2"
-tracing-opentelemetry = "0.17.3"
-tracing-subscriber = { version = "0.3.11", default-features = false, features = ["smallvec", "registry", "env-filter", "local-time", "fmt", "ansi", "std"] }
-tracing-bunyan-formatter = "0.3.3"
 
 #ssl
 #openssl = { version = "0.10.38", features = ["v110"] }
