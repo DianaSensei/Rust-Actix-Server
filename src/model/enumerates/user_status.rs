@@ -1,5 +1,5 @@
 use diesel::deserialize::FromSql;
-use diesel::pg::{Pg, PgValue};
+use diesel::pg::Pg;
 use diesel::serialize::{IsNull, Output, ToSql};
 use diesel::sql_types::Text;
 use diesel::{deserialize, serialize};
@@ -20,40 +20,31 @@ use std::str::FromStr;
     EnumCount,
     EnumDiscriminants,
 )]
-#[diesel(sql_type = Text)]
+#[sql_type = "Text"]
 pub enum UserStatus {
     Inactive,
     Activated,
 }
 
 impl ToSql<UserStatus, Pg> for UserStatus {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         let _ = out.write_all(self.to_string().as_ref());
         Ok(IsNull::No)
     }
 }
 
-impl ToSql<Text, Pg> for UserStatus {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+impl ToSql<diesel::sql_types::Text, Pg> for UserStatus {
+    fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         let _ = out.write_all(self.to_string().as_ref());
         Ok(IsNull::No)
     }
 }
 
-
-impl FromSql<Text, Pg> for UserStatus
-{
-    fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
-        match std::str::from_utf8(bytes.as_bytes()) {
-            Ok(str) => deserialize::Result::Ok(UserStatus::from_str(str).unwrap()),
-            Err(_e) => Err("Unrecognized enumerates variant".into()),
-        }
-    }
-
-    fn from_nullable_sql(bytes: Option<PgValue<'_>>) -> deserialize::Result<Self> {
+impl FromSql<diesel::sql_types::Text, Pg> for UserStatus {
+    fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match bytes {
             None => Err("Unrecognized enumerates variant".into()),
-            Some(_bytes) => match std::str::from_utf8(_bytes.as_bytes()) {
+            Some(_bytes) => match std::str::from_utf8(_bytes) {
                 Ok(str) => deserialize::Result::Ok(UserStatus::from_str(str).unwrap()),
                 Err(_e) => Err("Unrecognized enumerates variant".into()),
             },
