@@ -8,7 +8,7 @@ use std::fmt;
 use std::fmt::Formatter;
 
 #[derive(Serialize, Deserialize, Queryable, Identifiable, AsChangeset, Debug, Clone, PartialEq)]
-#[table_name = "users"]
+#[diesel(table_name = users)]
 // #[belongs_to(User)]
 pub struct User {
     pub id: i32,
@@ -27,7 +27,7 @@ pub struct User {
 }
 
 #[derive(Serialize, Deserialize, Insertable, Debug, Clone)]
-#[table_name = "users"]
+#[diesel(table_name = users)]
 pub struct NewUser {
     pub email: String,
     pub user_name: Option<String>,
