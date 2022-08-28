@@ -11,7 +11,7 @@ use crate::repositories::users_repository;
 use crate::services::clients::get_database_connection;
 use crate::utils::hasher::get_argon2_hasher;
 use crate::utils::translations::*;
-use actix_web::{guard, web, HttpResponse, Scope};
+use actix_web::{guard, web, HttpResponse, Scope, http};
 use chrono::Utc;
 use rosetta_i18n::Language;
 use rosetta_i18n::LanguageId;
@@ -19,7 +19,7 @@ use validator::Validate;
 
 pub fn router() -> Scope {
     web::scope("/api/v1/users")
-        .guard(guard::Header("content-type", "application/json"))
+        .guard(guard::Header(http::header::CONTENT_TYPE.as_str(), "application/json"))
         .service(
             web::resource("")
                 .route(web::get().to(get_all_users))

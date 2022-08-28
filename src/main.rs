@@ -78,7 +78,7 @@ fn log_config(nonblocking_file: tracing_appender::non_blocking::NonBlocking) {
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::util::SubscriberInitExt;
 
-    dotenv::dotenv().ok();
+    // dotenv::dotenv().ok();
 
     // std::env::set_var(
     //     "RUST_LOG",

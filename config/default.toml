@@ -1,6 +1,9 @@
 [server]
 listen_port = "3000"
 listen_url = "0.0.0.0:3000"
+tls_cert_file_path = "./127.0.0.1+1.pem"
+tls_key_file_path = "./127.0.0.1+1-key.pem"
+tls_enable = true
 
 [tracer.jaeger]
 url = "127.0.0.1:6831"

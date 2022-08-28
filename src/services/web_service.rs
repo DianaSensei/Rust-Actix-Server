@@ -1,7 +1,6 @@
 use crate::controllers;
 use crate::middlewares;
 use crate::settings;
-use crate::utils::project_profile::{Profile, PROFILE};
 use actix_cors::Cors;
 use actix_web::dev::ServiceResponse;
 use actix_web::web::Data;
@@ -20,16 +19,6 @@ use std::io::BufReader;
 
 #[allow(unused_must_use)]
 pub async fn start_web_service() {
-    // Start an (optional) otel prometheus metrics pipeline
-    let metrics_exporter = opentelemetry_prometheus::exporter().init();
-    let request_metrics = RequestMetrics::new(
-        opentelemetry::global::meter("backend"),
-        Some(|req: &actix_web::dev::ServiceRequest| {
-            req.path() == "/metrics" && req.method() == actix_web::http::Method::GET
-        }),
-        Some(metrics_exporter),
-    );
-
     let mut server = HttpServer::new(move || {
         App::new()
             // Json Handler Config
@@ -42,7 +31,13 @@ pub async fn start_web_service() {
             // .wrap(actix_session::CookieSession::signed(&[0; 32]).secure(false))
             .wrap(middlewares::LoggingRequestMiddleware)
             // Metric Prometheus
-            .wrap(request_metrics.clone())
+            .wrap(RequestMetrics::new(
+                opentelemetry::global::meter(&settings::SETTINGS.cargo_pkg_name),
+                Some(|req: &actix_web::dev::ServiceRequest| {
+                    req.path() == "/metrics" && req.method() == actix_web::http::Method::GET
+                }),
+                Some( opentelemetry_prometheus::exporter().init()),
+            ))
             // Tracing Jeager
             .wrap(RequestTracing::new())
             // Cors Config
@@ -55,18 +50,18 @@ pub async fn start_web_service() {
             .default_service(web::route().to(HttpResponse::NotFound))
     });
 
-    if PROFILE.eq(&Profile::DEVELOPMENT) {
-        server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
-            Some(listener) => server.listen(listener).unwrap(),
-            None => server.bind(&settings::SETTINGS.server.listen_url).unwrap(),
-        };
-    } else {
+    if settings::SETTINGS.server.tls_enable {
         let config = load_tls_config();
         server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
             Some(listener) => server.listen_rustls(listener, config).unwrap(),
             None => server
                 .bind_rustls(&settings::SETTINGS.server.listen_url, config)
                 .unwrap(),
+        };
+    } else {
+        server = match ListenFd::from_env().take_tcp_listener(0).unwrap() {
+            Some(listener) => server.listen(listener).unwrap(),
+            None => server.bind(&settings::SETTINGS.server.listen_url).unwrap(),
         };
     }
 
@@ -97,9 +92,7 @@ fn json_error_handler(err: error::JsonPayloadError, _req: &HttpRequest) -> error
     let detail = err.to_string();
     let resp = match &err {
         JsonPayloadError::ContentType => HttpResponse::UnsupportedMediaType().body(detail),
-        JsonPayloadError::Deserialize(json_err) if json_err.is_data() => {
-            HttpResponse::UnprocessableEntity().body(detail)
-        }
+        JsonPayloadError::Deserialize(json_err) if json_err.is_data() => HttpResponse::UnprocessableEntity().body(detail),
         _ => HttpResponse::BadRequest().body(detail),
     };
     error::InternalError::from_response(err, resp).into()
@@ -111,8 +104,8 @@ fn default_error_handler<B>(res: ServiceResponse<B>) -> actix_web::Result<ErrorH
 }
 
 fn load_tls_config() -> ServerConfig {
-    let cert_file = &mut BufReader::new(File::open("./127.0.0.1+1.pem").unwrap());
-    let key_file = &mut BufReader::new(File::open("./127.0.0.1+1-key.pem").unwrap());
+    let cert_file = &mut BufReader::new(File::open(&settings::SETTINGS.server.tls_cert_file_path).unwrap());
+    let key_file = &mut BufReader::new(File::open(&settings::SETTINGS.server.tls_key_file_path).unwrap());
     let cert_chain_byte = certs(cert_file).unwrap();
     let mut keys_byte = pkcs8_private_keys(key_file).unwrap();
     if keys_byte.is_empty() {

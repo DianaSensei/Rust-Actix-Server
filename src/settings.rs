@@ -52,6 +52,9 @@ pub struct Log {
 pub struct Server {
     pub listen_port: u16,
     pub listen_url: String,
+    pub tls_cert_file_path: String,
+    pub tls_key_file_path: String,
+    pub tls_enable: bool
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -97,12 +100,12 @@ pub static SETTINGS: Lazy<Settings> = Lazy::new(|| Settings::new().expect("confi
 
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
-        let env = get_profile().to_string().to_lowercase();
+        let profile = get_profile().to_string().to_lowercase();
         let s = Config::builder()
-            .set_default("hasher.scheme_version",
-                         default_hasher_scheme_version().to_string())?
+            .set_default("hasher.scheme_version", default_hasher_scheme_version().to_string())?
+            .set_default("server.tls_enable", false)?
             .add_source(File::with_name(CONFIG_FILE_PATH))
-            .add_source(File::with_name(&format!("{}{}", CONFIG_FOLDER_PATH, env)))
+            .add_source(File::with_name(&format!("{}{}", CONFIG_FOLDER_PATH, profile)))
             .add_source(Environment::default())
             .build()?;
 
