@@ -1,7 +1,7 @@
 use crate::settings;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
-use diesel_migrations::EmbeddedMigrations;
+use diesel_migrations::{EmbeddedMigrations, FileBasedMigrations, MigrationHarness};
 use once_cell::sync::Lazy;
 
 type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
@@ -17,14 +17,13 @@ static DB_CONNECTION_POOL: Lazy<Pool> = Lazy::new(|| {
     pool
 });
 
-// pub fn init_and_run_migration() {
-//     let conn = get_database_connection();
-//     // run_pending_migrations(&conn);
-//     //
-//     // (MIGRATIONS).unwrap();
-//     embedded_migrations::run_with_output(&conn, &mut std::io::stdout())
-//         .expect("Run Postgres Migration Fail");
-// }
+pub fn init_and_run_migration() {
+    let mut conn = get_database_connection();
+        // embedded_migrations::run_with_output(&conn, &mut std::io::stdout())
+        // .expect("Run Postgres Migration Fail");
+    let migrations = FileBasedMigrations::find_migrations_directory().unwrap();
+    conn.run_pending_migrations(migrations).expect("Run Postgres Migration Fail");
+}
 
 pub fn get_database_connection() -> DbConnection {
     DB_CONNECTION_POOL

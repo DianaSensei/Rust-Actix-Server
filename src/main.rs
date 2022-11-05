@@ -49,7 +49,7 @@ async fn main() {
 
     utils::hasher::get_argon2_hasher();
     // Create Database connection and run migration
-    // services::clients::postgres_client_service::init_and_run_migration();
+    services::clients::postgres_client_service::init_and_run_migration();
 
     // Start Consumers
     services::start_registered_consumer().await;
